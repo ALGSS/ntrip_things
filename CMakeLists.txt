@@ -25,7 +25,17 @@ add_subdirectory(ulog)
 
 if(WIN32)
 	set(SRC ntripcaster.c base64.c proxy_cluster.c geohash.c tokens.c evwrap.c)
-	set(LIBS wsocket fort ulog sqlite3)
+
+	# for windows platform's sqlite3. 20.5.14
+	# change
+	# set(LIBS wsocket fort ulog sqlite3)
+	# to
+	add_library(sqlite3_win STATIC ${CMAKE_SOURCE_DIR}/sqlite3_for_win/sqlite3.c sqlite3_for_win/shell.c)
+	target_include_directories(sqlite3_win PUBLIC sqlite3_for_win)
+	include_directories(sqlite3_for_win)
+
+	set(LIBS wsocket fort ulog sqlite3_win)
+
 else()
 	set(SRC ntripcaster.c base64.c proxy_cluster.c geohash.c tokens.c)
 	set(LIBS wsocket fort ulog sqlite3 ev m)

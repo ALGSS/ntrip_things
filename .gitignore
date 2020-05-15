@@ -1,3 +1,5 @@
 /build*/
 .*/
 
+# MinGW complile tmp files
+cmake-build-debug/
