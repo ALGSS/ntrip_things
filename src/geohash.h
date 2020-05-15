@@ -8,7 +8,7 @@ extern "C" {
 // encode geohash
 // return malloc'd string, NULL means error
 // precision: geohash string len
-// precison  = 4 ->  20 km
+// precision  = 4 ->  20 km
 // precision = 5 -> 2.4 km
 // precision = 6 -> 610 m
 // precision = 7 ->  76 m

@@ -9,11 +9,17 @@
 #include "../libfort/fort.h"
 #include "repo_version.h"
 
+#pragma clang diagnostic push
+#pragma ide diagnostic ignored "UnusedMacroInspection"
+#pragma ide diagnostic ignored "UnusedGlobalDeclarationInspection"
 #ifdef _WIN32
+
 # include "evwrap.h"
+
 #else
 # include <ev.h>
 #endif
+
 #include <stdio.h>
 #include <time.h>
 #include <string.h>
@@ -26,10 +32,9 @@
 
 
 #define DEFAULT_CONSOLE_PASSWD "passwd"
-#define TOKENS_DB_FILE  "cors-relay.db"
+#define TOKENS_DB_FILE  "ntrip_caster.db"
 
-static char * env_console_passwd()
-{
+static char *env_console_passwd() {
     char *p = getenv("CONSOLE_PASSWD");
     return p ? p : DEFAULT_CONSOLE_PASSWD;
 }
@@ -40,26 +45,26 @@ struct ntrip_caster;
 struct ntrip_source;
 
 struct ntrip_conn {
-    ev_io   io;
+    ev_io io;
     wsocket socket;
-    int     gate;
-    char    ip[64];
+    int gate;
+    char ip[64];
     ev_tstamp last_activity;
     unsigned char recv[1024];
-    size_t  recv_idx;
+    size_t recv_idx;
 
     struct ntrip_caster *caster;
     TAILQ_ENTRY(ntrip_conn) entries; // used for connection
 };
 
 struct ntrip_agent {
-    ev_io   io;
+    ev_io io;
     wsocket socket;
-    int     gate;
-    char    ip[64];
+    int gate;
+    char ip[64];
     ev_tstamp last_activity;
     unsigned char recv[1024];
-    size_t  recv_idx;
+    size_t recv_idx;
 
     struct ntrip_caster *caster;    // caster, weak ref
 
@@ -69,12 +74,12 @@ struct ntrip_agent {
     time_t login_time;  // ntrip login time
 
     // recent location
-    char   ggastr[256]; // recent gga string
+    char ggastr[256]; // recent gga string
     double pos[3];      // lat(deg),long(deg) height(m)
     double ecef[3];     // ecef coordinate
 
     struct ntrip_source *source; // bound ntrip_source, weak ref
-    int    source_ref_idx;
+    int source_ref_idx;
 
     size_t in_bytes;    // in bytes
     size_t in_bps;      // in bps
@@ -93,11 +98,11 @@ struct ntrip_agent {
 struct ntrip_source {
     struct ntrip_proxy *proxy;
     time_t proxy_activity;
-    int  gate;
+    int gate;
     char mnt[64];
     TAILQ_HEAD(, ntrip_agent) agents_head[2];   // first and second bound agents list, weak ref,
     unsigned char agents_cache[2][512];    // cache data
-    size_t        agents_cache_cnt[2];      // cache data len
+    size_t agents_cache_cnt[2];      // cache data len
     int swmagic;    // >= 0 use idx=0, < 0 use idx = 1
 
     struct ntrip_caster *caster;
@@ -105,9 +110,9 @@ struct ntrip_source {
 };
 
 struct ntrip_listener {
-    ev_io   io;
+    ev_io io;
     wsocket socket; // listen socket
-    int     gate;   // listen port
+    int gate;   // listen port
 
     struct ntrip_caster *caster;
     TAILQ_ENTRY(ntrip_listener) entries;
@@ -117,16 +122,16 @@ struct ntrip_caster {
     ev_timer timer_check; // timer for check agent alive
     ev_timer timer_src;   // timer for sending source gga
     ev_timer timer_log;   // timer for loging status
-    ev_stat  stat_user;   // stat watcher for user tokens file change
-    ev_stat  stat_src;    // stat watcher for source tokens file change
+    ev_stat stat_user;   // stat watcher for user tokens file change
+    ev_stat stat_src;    // stat watcher for source tokens file change
     ev_periodic periodic_reload; // periodic to reload user tokens file
 
     TAILQ_HEAD(, ntrip_listener) listeners_head; // listener list, owned
-    TAILQ_HEAD(, ntrip_conn)     conn_head;      // connections list(not login), owned
-    TAILQ_HEAD(, ntrip_agent)    agents_head;    // active agents list, owned
-    TAILQ_HEAD(, ntrip_source)   sources_head;   // source list, owned
+    TAILQ_HEAD(, ntrip_conn) conn_head;      // connections list(not login), owned
+    TAILQ_HEAD(, ntrip_agent) agents_head;    // active agents list, owned
+    TAILQ_HEAD(, ntrip_source) sources_head;   // source list, owned
 
-    ev_io   cmd_io;
+    ev_io cmd_io;
     wsocket cmd_sock;
 
     struct tcpsvr *log;
@@ -140,8 +145,7 @@ struct ntrip_caster {
 
 #define SEND(s, str)    send(s, str, strlen(str), 0)
 
-static wsocket listen_on(const char *addr, const char* service)
-{
+static wsocket listen_on(const char *addr, const char *service) {
     wsocket sock = INVALID_WSOCKET;
 
     struct addrinfo hints = {0};
@@ -167,7 +171,7 @@ static wsocket listen_on(const char *addr, const char* service)
             continue;
         }
         // enable addr resuse
-        setsockopt(sock, SOL_SOCKET, SO_REUSEADDR, (const char *)&(int){1}, sizeof(int));
+        setsockopt(sock, SOL_SOCKET, SO_REUSEADDR, (const char *) &(int) {1}, sizeof(int));
         if (bind(sock, p->ai_addr, p->ai_addrlen) == WSOCKET_ERROR) {
             // bind error
             wsocket_close(sock);
@@ -198,26 +202,23 @@ static wsocket listen_on(const char *addr, const char* service)
 }
 
 /* convert ddmm.mm in nmea format to deg -------------------------------------*/
-static double dmm2deg(double dmm)
-{
-    return floor(dmm/100.0)+fmod(dmm,100.0)/60.0;
+static double dmm2deg(double dmm) {
+    return floor(dmm / 100.0) + fmod(dmm, 100.0) / 60.0;
 }
 
-static void pos2ecef(const double *pos, double *r)
-{
+static void pos2ecef(const double *pos, double *r) {
 #define RE_WGS84    6378137.0           /* earth semimajor axis (WGS84) (m) */
 #define FE_WGS84    (1.0/298.257223563) /* earth flattening (WGS84) */
 
-    double sinp=sin(pos[0]),cosp=cos(pos[0]),sinl=sin(pos[1]),cosl=cos(pos[1]);
-    double e2=FE_WGS84*(2.0-FE_WGS84),v=RE_WGS84/sqrt(1.0-e2*sinp*sinp);
+    double sinp = sin(pos[0]), cosp = cos(pos[0]), sinl = sin(pos[1]), cosl = cos(pos[1]);
+    double e2 = FE_WGS84 * (2.0 - FE_WGS84), v = RE_WGS84 / sqrt(1.0 - e2 * sinp * sinp);
 
-    r[0]=(v+pos[2])*cosp*cosl;
-    r[1]=(v+pos[2])*cosp*sinl;
-    r[2]=(v*(1.0-e2)+pos[2])*sinp;
+    r[0] = (v + pos[2]) * cosp * cosl;
+    r[1] = (v + pos[2]) * cosp * sinl;
+    r[2] = (v * (1.0 - e2) + pos[2]) * sinp;
 }
 
-static bool agent_calc_location(struct ntrip_agent *agent)
-{
+static bool agent_calc_location(struct ntrip_agent *agent) {
 #define D2R (M_PI/180.0)
     if (AGENT_HAS_GGA(agent)) {
         // parse gga fileds
@@ -226,7 +227,7 @@ static bool agent_calc_location(struct ntrip_agent *agent)
         char *val[64];
         int n = 0;
         char *p, *q;
-        for (p = gga; *p && n < sizeof(val)/sizeof(val[0]); p = q + 1) {
+        for (p = gga; *p && n < sizeof(val) / sizeof(val[0]); p = q + 1) {
             if ((q = strchr(p, ',')) || (q = strchr(p, '*'))) {
                 val[n++] = p;
                 *q = '\0';
@@ -239,11 +240,11 @@ static bool agent_calc_location(struct ntrip_agent *agent)
             double lat = 0.0, lon = 0.0, alt = 0.0, msl = 0.0;
             char ns = 'N', ew = 'E';
             lat = atof(val[2]);  /* latitude (ddmm.mmm) */
-            ns  = *val[3];       /* N=north,S=south */
+            ns = *val[3];       /* N=north,S=south */
             lon = atof(val[4]);  /* longitude (dddmm.mmm) */
-            ew  = *val[5];       /* E=east,W=west */
-            alt =atof(val[9]);   /* altitude in msl */
-            msl =atof(val[11]);  /* height of geoid */
+            ew = *val[5];       /* E=east,W=west */
+            alt = atof(val[9]);   /* altitude in msl */
+            msl = atof(val[11]);  /* height of geoid */
             if ((ns != 'N' && ns != 'S') || (ew != 'E' && ew != 'W')) {
                 LOG_ERROR("invalid nmea gpgga format");
                 return false;
@@ -267,16 +268,15 @@ static bool agent_calc_location(struct ntrip_agent *agent)
     return false;
 }
 
-static double agent_distance(const struct ntrip_agent *ag1, const struct ntrip_agent *ag0)
-{
+static double agent_distance(const struct ntrip_agent *ag1, const struct ntrip_agent *ag0) {
     double dd[3];
     for (int i = 0; i < 3; i++) {
         dd[i] = ag1->ecef[i] - ag0->ecef[i];
     }
     return sqrt(dd[0] * dd[0] + dd[1] * dd[1] + dd[2] * dd[2]);
 }
-static bool caster_bind_agent(struct ntrip_caster *caster, struct ntrip_agent *agent)
-{
+
+static bool caster_bind_agent(struct ntrip_caster *caster, struct ntrip_agent *agent) {
     if (AGENT_IS_BOUND(agent)) {
         LOG_ERROR("%s() is already bound", __func__);
         return false;
@@ -293,7 +293,7 @@ static bool caster_bind_agent(struct ntrip_caster *caster, struct ntrip_agent *a
     TAILQ_FOREACH(src, &caster->sources_head, entries) {
         if (src->gate == agent->gate && strcasecmp(src->mnt, agent->mnt) == 0) {
             for (int i = 0; i < 2; i++) {
-                struct ntrip_agent* srcag = TAILQ_FIRST(&src->agents_head[i]);
+                struct ntrip_agent *srcag = TAILQ_FIRST(&src->agents_head[i]);
                 // find first wedge
                 if (srcag == NULL && wedge == NULL) {
                     wedge = src;
@@ -362,8 +362,7 @@ static bool caster_bind_agent(struct ntrip_caster *caster, struct ntrip_agent *a
     }
 }
 
-static void caster_relax_agent(struct ntrip_caster *caster, struct ntrip_agent *agent)
-{
+static void caster_relax_agent(struct ntrip_caster *caster, struct ntrip_agent *agent) {
     if (!AGENT_IS_BOUND(agent)) {
         LOG_ERROR("%s() is not bound", __func__);
         return;
@@ -373,7 +372,7 @@ static void caster_relax_agent(struct ntrip_caster *caster, struct ntrip_agent *
     // remove weak ref to each other
     TAILQ_REMOVE(&source->agents_head[agent->source_ref_idx], agent, src_entries);
     // check if source no-need-work
-    if (TAILQ_EMPTY(&source->agents_head[0]) &&  TAILQ_EMPTY(&source->agents_head[1])) {
+    if (TAILQ_EMPTY(&source->agents_head[0]) && TAILQ_EMPTY(&source->agents_head[1])) {
         // remove it from caster and close it
         LOG_TRACE("close source(%s)", ntripproxy_get_path(source->proxy));
         TAILQ_REMOVE(&caster->sources_head, source, entries);
@@ -385,31 +384,28 @@ static void caster_relax_agent(struct ntrip_caster *caster, struct ntrip_agent *
 }
 
 // only cleanup conn resource
-static void close_conn(EV_P_ struct ntrip_conn *conn)
-{
+static void close_conn(EV_P_ struct ntrip_conn *conn) {
     LOG_INFO("close conn(%d) from %s", conn->socket, conn->ip);
     ev_io_stop(EV_A_ &conn->io);
     wsocket_close(conn->socket);
     free(conn);
 }
+
 // only cleanup agent and conn resource
-static void close_agent(EV_P_ struct ntrip_agent *agent)
-{
+static void close_agent(EV_P_ struct ntrip_agent *agent) {
     LOG_INFO("close agent(%d) from %s", agent->socket, agent->ip);
     ev_io_stop(EV_A_ &agent->io);
     wsocket_close(agent->socket);
     free(agent);
 }
 
-static void caster_close_conn(EV_P_ struct ntrip_caster *caster, struct ntrip_conn *conn)
-{
+static void caster_close_conn(EV_P_ struct ntrip_caster *caster, struct ntrip_conn *conn) {
     LOG_INFO("remove conn(%d) from connections list", conn->socket);
     TAILQ_REMOVE(&caster->conn_head, conn, entries);
     close_conn(EV_A_ conn);
 }
 
-static void caster_close_agent(EV_P_ struct ntrip_caster *caster, struct ntrip_agent *agent)
-{
+static void caster_close_agent(EV_P_ struct ntrip_caster *caster, struct ntrip_agent *agent) {
     if (AGENT_IS_BOUND(agent)) {
         caster_relax_agent(caster, agent);
     }
@@ -419,8 +415,7 @@ static void caster_close_agent(EV_P_ struct ntrip_caster *caster, struct ntrip_a
 }
 
 // check if caster has  the mountpoint source
-static int caster_has_mountpoint(const struct ntrip_caster *caster, const char* mnt)
-{
+static int caster_has_mountpoint(const struct ntrip_caster *caster, const char *mnt) {
     // invalid mnt
     if (mnt[0] == '\0' || strcmp(mnt, "/") == 0) {
         return 0;
@@ -433,9 +428,8 @@ static int caster_has_mountpoint(const struct ntrip_caster *caster, const char* 
     return 0;
 }
 
-static const char* caster_gen_sourcetable(const struct ntrip_caster *caster)
-{
-    const char * _srctbbuf = ""
+static const char *caster_gen_sourcetable(const struct ntrip_caster *caster) {
+    const char *_srctbbuf = ""
         "STR;RTCM30_GG;RTCM30_GG;RTCM3X;1005(10),1004-1012(1),1033(10);2;GNSS;POPNet;CHN;0.00;0.00;1;1;POP Platform;none;B;N;500;POP\r\n"
         "STR;RTCM23_GPS;RTCM23_GPS;RTCM2X;1(1),31(1),41(1),3(10),32(30);2;GNSS;POPNet;CHN;0.00;0.00;1;1;POP Platform;none;B;N;500;POP\r\n"
         "STR;RTCM32_GGB;RTCM32_GGB;RTCM3X;1005(10),1074-1084-1124(1);2;GNSS;POPNet;CHN;0.00;0.00;1;1;POP Platform;none;B;N;500;POP\r\n"
@@ -443,8 +437,7 @@ static const char* caster_gen_sourcetable(const struct ntrip_caster *caster)
     return _srctbbuf;
 }
 
-static bool caster_match_client_token(const struct ntrip_caster *caster, const char* token, const char* mnt)
-{
+static bool caster_match_client_token(const struct ntrip_caster *caster, const char *token, const char *mnt) {
     char buf[64];
     snprintf(buf, sizeof(buf), "%s", token);
     char *p = strchr(buf, ':');
@@ -455,9 +448,8 @@ static bool caster_match_client_token(const struct ntrip_caster *caster, const c
     return false;
 }
 
-static struct ntrip_agent* caster_check_login(const struct ntrip_caster *caster, const char *token)
-{
-    struct ntrip_agent* ag;
+static struct ntrip_agent *caster_check_login(const struct ntrip_caster *caster, const char *token) {
+    struct ntrip_agent *ag;
     TAILQ_FOREACH(ag, &caster->agents_head, entries) {
         if (strcmp(ag->token, token) == 0) {
             return ag;
@@ -466,9 +458,8 @@ static struct ntrip_agent* caster_check_login(const struct ntrip_caster *caster,
     return NULL;
 }
 
-static void agent_read_cb(EV_P_ ev_io *w, int revents)
-{
-    struct ntrip_agent *agent = (struct ntrip_agent *)w;
+static void agent_read_cb(EV_P_ ev_io *w, int revents) {
+    struct ntrip_agent *agent = (struct ntrip_agent *) w;
     struct ntrip_caster *caster = agent->caster;
 
     int n = recv(agent->socket,
@@ -523,9 +514,8 @@ static void agent_read_cb(EV_P_ ev_io *w, int revents)
     }
 }
 
-static void conn_read_cb(EV_P_ ev_io *w, int revents)
-{
-    struct ntrip_conn *conn = (struct ntrip_conn *)w;
+static void conn_read_cb(EV_P_ ev_io *w, int revents) {
+    struct ntrip_conn *conn = (struct ntrip_conn *) w;
     struct ntrip_caster *caster = conn->caster;
 
     int n = recv(conn->socket,
@@ -555,145 +545,143 @@ static void conn_read_cb(EV_P_ ev_io *w, int revents)
     }
     conn->recv[conn->recv_idx] = '\0';
     // check ntrip request, end with \r\n\r\n
-    if (strstr(conn->recv, "\r\n\r\n")) {
-        char *p = strstr(conn->recv, "GET");
-        if (p == NULL) {
-            LOG_ERROR("conn(%d) invalid ntrip request", conn->socket);
-            caster_close_conn(EV_A_ caster, conn);
-            return;
+    if (!strstr(conn->recv, "\r\n\r\n")) return;
+    char *p = strstr(conn->recv, "GET");
+    if (p == NULL) {
+        LOG_ERROR("conn(%d) invalid ntrip request", conn->socket);
+        caster_close_conn(EV_A_ caster, conn);
+        return;
+    }
+    // process ntrip client requst
+    // TODO:
+    char *q, *ag;
+    if (!(q = strstr(p, "\r\n")) || !(ag = strstr(q, "User-Agent:")) || !strstr(ag, "\r\n")) {
+        LOG_ERROR("conn(%d) invalid ntrip request", conn->socket);
+        caster_close_conn(EV_A_ caster, conn);
+        return;
+    }
+    ag += strlen("User-Agent:");
+    char useragent[64];
+    // fill user agent
+    sscanf(ag, "%63[^\n]", useragent);
+    // test protocol
+    char url[64] = {0};
+    char proto[64] = {0};
+    if (sscanf(p, "GET %s %s", url, proto) < 2 || strncmp(proto, "HTTP/1", strlen("HTTP/1")) != 0) {
+        LOG_ERROR("conn(%d) invalid ntrip proto=%s", conn->socket, proto);
+        caster_close_conn(EV_A_ caster, conn);
+        return;
+    }
+    char mnt[64];
+    snprintf(mnt, sizeof(mnt), "%s", url[0] == '/' ? url + 1 : url);
+    // check if mountpoint exist, if not , send source table
+    if (!caster_has_mountpoint(caster, mnt)) {
+        // send source table
+        LOG_DEBUG("send source table to conn(%d) from %s",
+                  conn->socket, conn->ip);
+        const char *srctb = caster_gen_sourcetable(caster);
+        int srctblen = strlen(srctb);
+        char buf[256];
+        buf[0] = '\0';
+        time_t now = time(NULL);
+        // NOTE: DO NOT use time functions in LOG_XXX macros
+        char *timestr = strdup(asctime(gmtime(&now)));
+        snprintf(buf, sizeof(buf),
+                 "SOURCETABLE 200 OK\r\n"
+                 "Server: https://github.com/tisyang/cors-relay\r\n"
+                 "Date: %.24s UTC\r\n"
+                 "Connection: close\r\n"
+                 "Content-Type: text/plain\r\n"
+                 "Content-Length: %d\r\n\r\n",
+                 timestr, srctblen);
+        free(timestr);
+        if (send(conn->socket, buf, strlen(buf), 0) > 0) {
+            send(conn->socket, srctb, srctblen, 0);
         }
-        // process ntrip client requst
-        // TODO:
-        char *q, *ag;
-        if (!(q = strstr(p, "\r\n")) || !(ag = strstr(q, "User-Agent:")) || !strstr(ag, "\r\n")) {
-            LOG_ERROR("conn(%d) invalid ntrip request", conn->socket);
-            caster_close_conn(EV_A_ caster, conn);
-            return;
-        }
-        ag += strlen("User-Agent:");
-        char useragent[64];
-        // fill user agent
-        sscanf(ag, "%63[^\n]", useragent);
-        // test protocol
-        char url[64] = {0};
-        char proto[64] = {0};
-        if (sscanf(p, "GET %s %s", url, proto) < 2 || strncmp(proto, "HTTP/1", strlen("HTTP/1")) != 0) {
-            LOG_ERROR("conn(%d) invalid ntrip proto=%s", conn->socket, proto);
-            caster_close_conn(EV_A_ caster, conn);
-            return;
-        }
-        char mnt[64];
-        snprintf(mnt, sizeof(mnt), "%s", url[0] == '/' ? url + 1 : url);
-        // check if mountpoint exist, if not , send source table
-        if (!caster_has_mountpoint(caster, mnt)) {
-            // send source table
-            LOG_DEBUG("send source table to conn(%d) from %s",
-                      conn->socket, conn->ip);
-            const char* srctb = caster_gen_sourcetable(caster);
-            int srctblen = strlen(srctb);
-            char buf[256];
-            buf[0] = '\0';
-            time_t now = time(NULL);
-            // NOTE: DO NOT use time functions in LOG_XXX macros
-            char* timestr = strdup(asctime(gmtime(&now)));
-            snprintf(buf, sizeof(buf),
-                "SOURCETABLE 200 OK\r\n"
-                "Server: https://github.com/tisyang/cors-relay\r\n"
-                "Date: %.24s UTC\r\n"
-                "Connection: close\r\n"
-                "Content-Type: text/plain\r\n"
-                "Content-Length: %d\r\n\r\n",
-                timestr, srctblen);
-            free(timestr);
-            if (send(conn->socket, buf, strlen(buf), 0) > 0) {
-                send(conn->socket, srctb, srctblen, 0);
-            }
-            caster_close_conn(EV_A_ caster, conn);
-            return;
-        }
-        // check authentication
-        int auth = 0; // if authorization success
-        char token[64];
-        if ((p = strstr(conn->recv, "Authorization:"))) {
-            char method[32] = {0};
-            char tokenbuf[64] = {0};
-            if (sscanf(p, "Authorization: %s %s", method, tokenbuf) == 2) {
-                if (strcmp(method, "Basic") == 0) {
-                    // decode token
-                    size_t tklen = 0;
-                    unsigned char* tk = base64_decode(tokenbuf, strlen(tokenbuf), &tklen);
-                    if (tk) {
-                        snprintf(token, sizeof(token), "%.*s", tklen, tk);
-                        free(tk);
-                        if (caster_match_client_token(caster, token, mnt)) {
-                            auth = 1;
-                        }
+        caster_close_conn(EV_A_ caster, conn);
+        return;
+    }
+    // check authentication
+    int auth = 0; // if authorization success
+    char token[64];
+    if ((p = strstr(conn->recv, "Authorization:"))) {
+        char method[32] = {0};
+        char tokenbuf[64] = {0};
+        if (sscanf(p, "Authorization: %s %s", method, tokenbuf) == 2) {
+            if (strcmp(method, "Basic") == 0) {
+                // decode token
+                size_t tklen = 0;
+                unsigned char *tk = base64_decode(tokenbuf, strlen(tokenbuf), &tklen);
+                if (tk) {
+                    snprintf(token, sizeof(token), "%.*s", tklen, tk);
+                    free(tk);
+                    if (caster_match_client_token(caster, token, mnt)) {
+                        auth = 1;
                     }
                 }
             }
         }
-        if (!auth) { // auth failed
-            LOG_INFO("agent(%d) client authorization failed.", conn->socket);
-            send(conn->socket, NTRIP_RESPONSE_UNAUTHORIZED,
-                strlen(NTRIP_RESPONSE_UNAUTHORIZED), 0);
-            caster_close_conn(EV_A_ caster, conn);
-            return;
-        }
-        // check if already login
-        struct ntrip_agent* oldag = caster_check_login(caster, token);
-        if (oldag) {
-            // close old ones
-            LOG_INFO("close already login agent(%d)", oldag->socket);
-            caster_close_agent(EV_A_ caster, oldag);
-        }
-        // create pending agent
-        struct ntrip_agent *agent = malloc(sizeof(*agent));
-        if (agent == NULL) {
-            LOG_ERROR("malloc error, %s", strerror(errno));
-            caster_close_conn(EV_A_ caster, conn);
-            return;
-        }
-        // copy from conn to agent
-        agent->socket = conn->socket;
-        snprintf(agent->ip, sizeof(agent->ip), conn->ip);
-        agent->gate = conn->gate;
-        agent->last_activity = conn->last_activity;
-        agent->recv[0] = '\0';
-        agent->recv_idx = 0;
-        ev_io_stop(EV_A_ &conn->io);
-        LOG_INFO("remove conn(%d) from connections list", conn->socket);
-        TAILQ_REMOVE(&caster->conn_head, conn, entries);
-        free(conn);
-
-        // use agent read cb
-        ev_io_init(EV_A_ &agent->io, agent_read_cb, WSOCKET_GET_FD(agent->socket), EV_READ);
-        ev_io_start(EV_A_ &agent->io);
-        snprintf(agent->token, sizeof(agent->token), token);
-        snprintf(agent->mnt, sizeof(agent->mnt), mnt);
-        snprintf(agent->info, sizeof(agent->info), useragent);
-        agent->login_time = time(NULL);
-        agent->ggastr[0] = '\0';
-        for (int i = 0; i < 3; i++) {
-            agent->pos[i] = 0;
-            agent->ecef[i] = 0;
-        }
-        agent->source = NULL;
-        agent->source_ref_idx = 0;
-        agent->in_bytes = 0;
-        agent->in_bps = 0;
-        agent->out_bytes = 0;
-        agent->out_bps = 0;
-        agent->caster = caster;
-        // send response
-        SEND(conn->socket, NTRIP_RESPONSE_OK);
-        LOG_INFO("move agent(%d) into client agents", agent->socket);
-        TAILQ_INSERT_TAIL(&caster->agents_head, agent, entries);
     }
+    if (!auth) { // auth failed
+        LOG_INFO("agent(%d) client authorization failed.", conn->socket);
+        send(conn->socket, NTRIP_RESPONSE_UNAUTHORIZED,
+             strlen(NTRIP_RESPONSE_UNAUTHORIZED), 0);
+        caster_close_conn(EV_A_ caster, conn);
+        return;
+    }
+    // check if already login
+    struct ntrip_agent *oldag = caster_check_login(caster, token);
+    if (oldag) {
+        // close old ones
+        LOG_INFO("close already login agent(%d)", oldag->socket);
+        caster_close_agent(EV_A_ caster, oldag);
+    }
+    // create pending agent
+    struct ntrip_agent *agent = malloc(sizeof(*agent));
+    if (agent == NULL) {
+        LOG_ERROR("malloc error, %s", strerror(errno));
+        caster_close_conn(EV_A_ caster, conn);
+        return;
+    }
+    // copy from conn to agent
+    agent->socket = conn->socket;
+    snprintf(agent->ip, sizeof(agent->ip), conn->ip);
+    agent->gate = conn->gate;
+    agent->last_activity = conn->last_activity;
+    agent->recv[0] = '\0';
+    agent->recv_idx = 0;
+    ev_io_stop(EV_A_ &conn->io);
+    LOG_INFO("remove conn(%d) from connections list", conn->socket);
+    TAILQ_REMOVE(&caster->conn_head, conn, entries);
+    free(conn);
+
+    // use agent read cb
+    ev_io_init(EV_A_ & agent->io, agent_read_cb, WSOCKET_GET_FD(agent->socket), EV_READ);
+    ev_io_start(EV_A_ &agent->io);
+    snprintf(agent->token, sizeof(agent->token), token);
+    snprintf(agent->mnt, sizeof(agent->mnt), mnt);
+    snprintf(agent->info, sizeof(agent->info), useragent);
+    agent->login_time = time(NULL);
+    agent->ggastr[0] = '\0';
+    for (int i = 0; i < 3; i++) {
+        agent->pos[i] = 0;
+        agent->ecef[i] = 0;
+    }
+    agent->source = NULL;
+    agent->source_ref_idx = 0;
+    agent->in_bytes = 0;
+    agent->in_bps = 0;
+    agent->out_bytes = 0;
+    agent->out_bps = 0;
+    agent->caster = caster;
+    // send response
+    SEND(conn->socket, NTRIP_RESPONSE_OK);
+    LOG_INFO("move agent(%d) into client agents", agent->socket);
+    TAILQ_INSERT_TAIL(&caster->agents_head, agent, entries);
 }
 
-static void listener_accept_cb(EV_P_ ev_io *w, int revents)
-{
-    struct ntrip_listener *listener = (struct ntrip_listener *)w;
+static void listener_accept_cb(EV_P_ ev_io *w, int revents) {
+    struct ntrip_listener *listener = (struct ntrip_listener *) w;
     struct ntrip_caster *caster = listener->caster;
 
     wsocket sock = INVALID_WSOCKET;
@@ -705,7 +693,7 @@ static void listener_accept_cb(EV_P_ ev_io *w, int revents)
         return;
     }
 
-    sock = accept(listener->socket, (struct sockaddr *)&conn_addr, &conn_addrlen);
+    sock = accept(listener->socket, (struct sockaddr *) &conn_addr, &conn_addrlen);
     if (sock == INVALID_WSOCKET) {
         LOG_ERROR("accept() error, %s", wsocket_strerror(wsocket_errno));
         return;
@@ -716,7 +704,7 @@ static void listener_accept_cb(EV_P_ ev_io *w, int revents)
     char addrbuf[NI_MAXHOST] = {0};
     char servbuf[NI_MAXSERV] = {0};
     int rv = 0;
-    if ((rv = getnameinfo((struct sockaddr *)&conn_addr, conn_addrlen,
+    if ((rv = getnameinfo((struct sockaddr *) &conn_addr, conn_addrlen,
                           addrbuf, sizeof(addrbuf),
                           servbuf, sizeof(servbuf),
                           NI_NUMERICHOST | NI_NUMERICSERV)) == 0) {
@@ -741,14 +729,13 @@ static void listener_accept_cb(EV_P_ ev_io *w, int revents)
     conn->caster = caster;
 
     ev_io_init(&conn->io, conn_read_cb, WSOCKET_GET_FD(conn->socket), EV_READ);
-    ev_io_start(EV_A_  &conn->io);
+    ev_io_start(EV_A_ &conn->io);
     LOG_INFO("move conn(%d) to connections list", conn->socket);
     TAILQ_INSERT_TAIL(&caster->conn_head, conn, entries);
 }
 
-static void caster_tmcheck_cb(EV_P_ ev_timer *w, int revents)
-{
-    struct ntrip_caster *caster = (struct ntrip_caster *)((char *)w - offsetof(struct ntrip_caster, timer_check));
+static void caster_tmcheck_cb(EV_P_ ev_timer *w, int revents) {
+    struct ntrip_caster *caster = (struct ntrip_caster *) ((char *) w - offsetof(struct ntrip_caster, timer_check));
     ev_tstamp now = ev_now(EV_A);
     // check conn list
     struct ntrip_conn *conn, *tmpconn;
@@ -768,10 +755,9 @@ static void caster_tmcheck_cb(EV_P_ ev_timer *w, int revents)
     }
 }
 
-static void caster_tmsrc_cb(EV_P_ ev_timer *w, int revents)
-{
+static void caster_tmsrc_cb(EV_P_ ev_timer *w, int revents) {
     time_t now = time(NULL);
-    struct ntrip_caster *caster = (struct ntrip_caster *)((char *)w - offsetof(struct ntrip_caster, timer_src));
+    struct ntrip_caster *caster = (struct ntrip_caster *) ((char *) w - offsetof(struct ntrip_caster, timer_src));
     struct ntrip_source *src, *tmpsrc;
     TAILQ_FOREACH_SAFE(src, &caster->sources_head, entries, tmpsrc) {
         struct ntrip_agent *ag0 = TAILQ_FIRST(&src->agents_head[0]);
@@ -809,13 +795,11 @@ static void caster_tmsrc_cb(EV_P_ ev_timer *w, int revents)
     if (psock) send(*psock, str, strlen(str), 0); \
 } while (0)
 
-static void system_report(ev_tstamp now, struct ntrip_caster *caster,
-                          FILE *fp, wsocket *psock)
-{
+static void system_report(ev_tstamp now, struct ntrip_caster *caster, FILE *fp, wsocket *psock) {
     // print status of all activity
-    WRITE_STR(caster->log, fp, psock, "==== BEGIN SYSTEM REPORT ====\n");
+    WRITE_STR(caster->log, fp, psock, "\n\n\n--------------- BEGIN SYSTEM REPORT ---------------\n");
     WRITE_STR(caster->log, fp, psock, REPO_VERSION ", " REPO_DATE "\n");
-    WRITE_STR(caster->log, fp, psock, ctime(&(time_t){time(NULL)}));
+    WRITE_STR(caster->log, fp, psock, ctime(&(time_t) {time(NULL)}));
     {
         WRITE_STR(caster->log, fp, psock, "Resources Usage Table:\n");
         int user_total = tokens_user_count();
@@ -832,10 +816,10 @@ static void system_report(ev_tstamp now, struct ntrip_caster *caster,
                     "Source\nTotal", "Source\nRate", "Potency");
         ft_printf_ln(table, "%d|%d|%.1f %%|%d|%d|%.1f %%|%.1f %%",
                      user_online, user_total,
-                     user_total <= 0 ? 0 : (float)user_online/user_total * 100,
+                     user_total <= 0 ? 0 : (float) user_online / user_total * 100,
                      src_used, src_total,
-                     src_total <= 0  ? 0 : (float)src_used/src_total * 100,
-                     src_total <= 0  ? 0 : (float)user_online/src_total * 100);
+                     src_total <= 0 ? 0 : (float) src_used / src_total * 100,
+                     src_total <= 0 ? 0 : (float) user_online / src_total * 100);
         WRITE_STR(caster->log, fp, psock, ft_to_string(table));
         ft_destroy_table(table);
     }
@@ -883,18 +867,16 @@ static void system_report(ev_tstamp now, struct ntrip_caster *caster,
         WRITE_STR(caster->log, fp, psock, ft_to_string(table));
         ft_destroy_table(table);
     }
-    WRITE_STR(caster->log, fp, psock, "==== END SYSTEM REPORT ====\n");
+    WRITE_STR(caster->log, fp, psock, "====END SYSTEM REPORT====\n");
 }
 
-static void caster_tmlog_cb(EV_P_ ev_timer *w, int revents)
-{
-    struct ntrip_caster *caster = (struct ntrip_caster *)((char *)w - offsetof(struct ntrip_caster, timer_log));
+static void caster_tmlog_cb(EV_P_ ev_timer *w, int revents) {
+    struct ntrip_caster *caster = (struct ntrip_caster *) ((char *) w - offsetof(struct ntrip_caster, timer_log));
     ev_tstamp now = ev_now(EV_A);
     system_report(now, caster, stdout, NULL);
 }
 
-static void caster_midnight_cb(EV_P_ ev_periodic *w, int revents)
-{
+static void caster_midnight_cb(EV_P_ ev_periodic *w, int revents) {
     LOG_INFO("midnight comming, now run tokens user gc");
     tokens_user_gc();
 }
@@ -907,18 +889,16 @@ struct ntrip_cmd_arg {
     struct ntrip_caster *caster;
 };
 
-static void on_iter_usertokens(void *userdata, const char *user, const char *passwd, const char *expire)
-{
-    wsocket sock = (wsocket)userdata;
+static void on_iter_usertokens(void *userdata, const char *user, const char *passwd, const char *expire) {
+    wsocket sock = (wsocket) userdata;
     char out[128];
     out[0] = '\0';
     snprintf(out, sizeof(out), "%s:%s\t%s\r\n", user, passwd, expire);
     SEND(sock, out);
 }
 
-static void on_iter_srctokens(void *userdata, const char* token, const char *expire)
-{
-    wsocket sock = (wsocket)userdata;
+static void on_iter_srctokens(void *userdata, const char *token, const char *expire) {
+    wsocket sock = (wsocket) userdata;
     char path[64];
     snprintf(path, sizeof(path), "%s", token);
     char *p = strchr(path, '@');
@@ -934,9 +914,8 @@ static void on_iter_srctokens(void *userdata, const char* token, const char *exp
     SEND(sock, out);
 }
 
-static void on_cmd_cb(int revents, void* arg)
-{
-    struct ntrip_cmd_arg *cmd_arg = (struct ntrip_cmd_arg *)arg;
+static void on_cmd_cb(int revents, void *arg) {
+    struct ntrip_cmd_arg *cmd_arg = (struct ntrip_cmd_arg *) arg;
     wsocket sock = cmd_arg->socket;
     struct ntrip_caster *caster = cmd_arg->caster;
     do {
@@ -958,9 +937,9 @@ static void on_cmd_cb(int revents, void* arg)
                 break;
             }
             buf[n] = '\0';
-            int   argc = 0;
-            char* argv[8];
-            char* p = strtok(buf, " \t\r\n");
+            int argc = 0;
+            char *argv[8];
+            char *p = strtok(buf, " \t\r\n");
             while (p != NULL && argc < 8) {
                 argv[argc++] = p;
                 p = strtok(NULL, " \t\r\n");
@@ -985,7 +964,7 @@ static void on_cmd_cb(int revents, void* arg)
                 }
                 // send response and list
                 SEND(sock, "OK USER-LIST\r\n");
-                tokens_user_iterate(on_iter_usertokens, (void *)sock);
+                tokens_user_iterate(on_iter_usertokens, (void *) sock);
                 SEND(sock, "\r\n");
                 LOG_INFO("console(%d) %s cmd OK.", sock, argv[0]);
             } else if (strcmp(argv[0], "USER-ADD") == 0) {
@@ -1031,11 +1010,11 @@ static void on_cmd_cb(int revents, void* arg)
                 }
                 // send response and clients
                 SEND(sock, "OK CLIENT-LIST\r\n");
-                struct ntrip_agent* ag = NULL;
+                struct ntrip_agent *ag = NULL;
                 TAILQ_FOREACH(ag, &caster->agents_head, entries) {
                     char line[128];
                     char time[32];
-                    struct tm* timeinfo = localtime(&ag->login_time);
+                    struct tm *timeinfo = localtime(&ag->login_time);
                     strftime(time, sizeof(time), "%Y-%m-%d %H:%M:%S", timeinfo);
                     snprintf(line, sizeof(line), "%s\t%s\t%s\r\n", ag->token, ag->ip, time);
                     SEND(sock, line);
@@ -1099,7 +1078,7 @@ static void on_cmd_cb(int revents, void* arg)
                 }
                 // send response and list
                 SEND(sock, "OK SOURCE-LIST\r\n");
-                tokens_src_iterate(on_iter_srctokens, (void *)sock);
+                tokens_src_iterate(on_iter_srctokens, (void *) sock);
                 SEND(sock, "\r\n");
                 LOG_INFO("console(%d) %s cmd OK.", sock, argv[0]);
             }
@@ -1110,9 +1089,8 @@ static void on_cmd_cb(int revents, void* arg)
     free(cmd_arg);
 }
 
-static void cmd_accept_cb(EV_P_ ev_io *w, int revents)
-{
-    struct ntrip_caster *caster = (struct ntrip_caster *)((char *)w - offsetof(struct ntrip_caster, cmd_io));
+static void cmd_accept_cb(EV_P_ ev_io *w, int revents) {
+    struct ntrip_caster *caster = (struct ntrip_caster *) ((char *) w - offsetof(struct ntrip_caster, cmd_io));
     wsocket sock = INVALID_WSOCKET;
     struct sockaddr_storage agent_addr = {0};
     socklen_t agent_addrlen = sizeof(agent_addr);
@@ -1122,7 +1100,7 @@ static void cmd_accept_cb(EV_P_ ev_io *w, int revents)
         return;
     }
 
-    sock = accept(caster->cmd_sock, (struct sockaddr *)&agent_addr, &agent_addrlen);
+    sock = accept(caster->cmd_sock, (struct sockaddr *) &agent_addr, &agent_addrlen);
     if (sock == INVALID_WSOCKET) {
         LOG_ERROR("accept() error, %s", wsocket_strerror(wsocket_errno));
         return;
@@ -1133,7 +1111,7 @@ static void cmd_accept_cb(EV_P_ ev_io *w, int revents)
     char addrbuf[NI_MAXHOST] = {0};
     char servbuf[NI_MAXSERV] = {0};
     int rv = 0;
-    if ((rv = getnameinfo((struct sockaddr *)&agent_addr, agent_addrlen,
+    if ((rv = getnameinfo((struct sockaddr *) &agent_addr, agent_addrlen,
                           addrbuf, sizeof(addrbuf),
                           servbuf, sizeof(servbuf),
                           NI_NUMERICHOST | NI_NUMERICSERV)) == 0) {
@@ -1145,34 +1123,32 @@ static void cmd_accept_cb(EV_P_ ev_io *w, int revents)
     struct ntrip_cmd_arg *arg = malloc(sizeof(*arg));
     arg->caster = caster;
     arg->socket = sock;
-    ev_once(EV_A_ WSOCKET_GET_FD(sock), EV_READ, 2.0, on_cmd_cb, (void *)arg);
+    ev_once(EV_A_ WSOCKET_GET_FD(sock), EV_READ, 2.0, on_cmd_cb, (void *) arg);
 }
 
 
-static FILE* m_logf = NULL;
+static FILE *m_logf = NULL;
 
-static int log_print(void *userdata, int tag, const char *line)
-{
+static int log_print(void *userdata, int tag, const char *line) {
     printf(line);
     if (m_logf) {
         fputs(line, m_logf);
         fflush(m_logf);
     }
     if (userdata) {
-        struct tcpsvr *str =  userdata;
+        struct tcpsvr *str = userdata;
         tcpsvr_write(str, line, strlen(line));
     }
 }
 
-int main(int argc, const char *argv[])
-{
+int main(int argc, const char *argv[]) {
     printf("qxbroadcaster version %s, %s\n", REPO_VERSION, REPO_DATE);
 #ifndef _WIN32
     signal(SIGPIPE, SIG_IGN);
 #endif
     {
         const char *name = argv[0];
-        for (const char* p = name; *p; p++) {
+        for (const char *p = name; *p; p++) {
             if (*p == '/' || *p == '\\') {
                 name = p + 1;
             }
@@ -1182,7 +1158,7 @@ int main(int argc, const char *argv[])
         strftime(tim, sizeof(tim), "%y%m%d_%H%M", localtime(&now));
         char buf[64];
         snprintf(buf, sizeof(buf), "log_%s.%s", name, tim);
-        FILE* logf = fopen(buf, "w");
+        FILE *logf = fopen(buf, "w");
         m_logf = logf;
     }
     WSOCKET_INIT();
@@ -1205,7 +1181,7 @@ int main(int argc, const char *argv[])
         return 1;
     }
 
-    struct ev_loop* loop = EV_DEFAULT;
+    struct ev_loop *loop = EV_DEFAULT;
     static struct ntrip_caster caster = {0};
     TAILQ_INIT(&caster.listeners_head);
     TAILQ_INIT(&caster.conn_head);
@@ -1213,7 +1189,7 @@ int main(int argc, const char *argv[])
     TAILQ_INIT(&caster.sources_head);
     caster.log = &logsvr;
 
-    int gates[3] = { 8001, 8002, 8003 };
+    int gates[3] = {8001, 8002, 8003};
     // create listeners
     for (int i = 0; i < sizeof(gates) / sizeof(gates[0]); i++) {
         char serv[16];
@@ -1282,7 +1258,7 @@ int main(int argc, const char *argv[])
                     if (i == 0) {
                         if (src->swmagic >= 0) {
                             // backup data
-                            src->agents_cache_cnt[0]  = rd;
+                            src->agents_cache_cnt[0] = rd;
                             memcpy(src->agents_cache[0], buf, rd);
                         } else {
                             // using backup data
@@ -1292,7 +1268,7 @@ int main(int argc, const char *argv[])
                     } else if (i == 1) {
                         if (src->swmagic < 0) {
                             // backup data
-                            src->agents_cache_cnt[1]  = rd;
+                            src->agents_cache_cnt[1] = rd;
                             memcpy(src->agents_cache[1], buf, rd);
                         } else {
                             // using backup data
@@ -1320,3 +1296,5 @@ int main(int argc, const char *argv[])
     WSOCKET_CLEANUP();
     return 0;
 }
+
+#pragma clang diagnostic pop
