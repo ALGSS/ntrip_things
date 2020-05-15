@@ -1,7 +1,7 @@
 #!/bin/bash
 
 APPS=(
-    cors-relay
+    ntrip_caster
 )
 
 while true

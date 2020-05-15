@@ -1,12 +1,12 @@
-#include "ulog/ulog.h"
-#include "wsocket/wsocket.h"
-#include "wsocket/utils/tcpsvr.h"
-#include "queue/queue.h"
+#include "../ulog/ulog.h"
+#include "../wsocket/wsocket.h"
+#include "../wsocket/utils/tcpsvr.h"
+#include "../queue/queue.h"
 #include "base64.h"
 #include "geohash.h"
 #include "tokens.h"
 #include "proxy_cluster.h"
-#include "libfort/fort.h"
+#include "../libfort/fort.h"
 #include "repo_version.h"
 
 #ifdef _WIN32

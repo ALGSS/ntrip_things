@@ -1,5 +1,5 @@
-cmake_minimum_required(VERSION 2.8)
-project(cors-relay)
+cmake_minimum_required(VERSION 3.6)
+project(ntrip_caster)
 set(CMAKE_C_STANDARD 99)
 
 # using git version
@@ -24,7 +24,7 @@ add_subdirectory(libfort)
 add_subdirectory(ulog)
 
 if(WIN32)
-	set(SRC ntripcaster.c base64.c proxy_cluster.c geohash.c tokens.c evwrap.c)
+	set(SRC src/ntripcaster.c src/base64.c src/proxy_cluster.c src/geohash.c src/tokens.c src/evwrap.c)
 
 	# for windows platform's sqlite3. 20.5.14
 	# change
@@ -37,7 +37,7 @@ if(WIN32)
 	set(LIBS wsocket fort ulog sqlite3_win)
 
 else()
-	set(SRC ntripcaster.c base64.c proxy_cluster.c geohash.c tokens.c)
+	set(SRC src/ntripcaster.c src/base64.c src/proxy_cluster.c src/geohash.c src/tokens.c)
 	set(LIBS wsocket fort ulog sqlite3 ev m)
 endif()
 

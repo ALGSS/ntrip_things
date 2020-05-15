@@ -1,8 +1,8 @@
 #include "proxy_cluster.h"
-#include "ulog/ulog.h"
-#include "queue/queue.h"
+#include "../ulog/ulog.h"
+#include "../queue/queue.h"
 #include "tokens.h"
-#include "wsocket/utils/ntripcli.h"
+#include "../wsocket/utils/ntripcli.h"
 
 #include <stdbool.h>
 #include <errno.h>
