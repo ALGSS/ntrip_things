@@ -1,4 +1,12 @@
-# Ntrip Caster
+NTRIP THINGS
+
+
+# ntrip server
+...
+
+
+
+# ntrip Caster
 [ntrip caster](https://github.com/ALGSS/ntrip_caster) project is forked  [tisyang/ntrip_caster](https://github.com/tisyang/ntrip_caster). This project is serverd as a CORS network's NTRIP caster service program. 
 
 It is developed by c program language and support compiled on windows or linux platform. It is also support high  concurrent  underling  based on single thread and libev.
@@ -6,9 +14,9 @@ It is developed by c program language and support compiled on windows or linux p
 
 
 
-# usage
+## usage
 
-## technology pipeline
+### technology pipeline
 
 下面文段中的概念解释：
 
@@ -44,20 +52,20 @@ ntrip_caster  提供一个管理接口，可以用于用户创建、更新，源
 
 
 
-## DB
+### DB
 
 ntrip_caster 默认的帐号及源 CORS 数据均保存在数据库中（sqlite3），默认的文件名为 `ntrip_caster.db`。
 通常可以使用管理接口来进行管理，而不是使用数据操作数据库。
 
 
 
-## interfasces
+### interfasces
 
 管理接口以 TCP Server 端口形式提供，默认端口号为 8000（可以在代码中修改)，管理命令为文本格式，提供的管理命令均会使用密码进行验证，确保命令来源可信。管理密码通过环境变量 `CONSOLE_PASSWD` 设置，默认为 `passwd`.
 
 管理接口提供以下命令：
 
-###  USER-LIST 列出所有用户
+####  USER-LIST 列出所有用户
 
 格式为 `USER-LIST passwd`，命令返回数据库中所有有效的用户名密码，执行正常返回格式为:
 
@@ -72,13 +80,13 @@ user:pass  2020-12-31 23:59:59\r\n
 
 失败返回格式为 `ERROR xxxx\r\n`描述了错误信息。
 
-### USER-ADD 新增用户
+#### USER-ADD 新增用户
 
 格式为 `USER-ADD passwd user:pass EDATE [ETIME]`，其中 `EDATE` 为用户过期日期，`ETIME` 为过期时间，`ETIME` 为可选，默认为 `23:59:59`。命令向数据库中新增用户名密码以及有效期信息。
 
 命令执行正常返回 `OK USER-ADD\r\n\r\n`，失败返回 `ERROR xxxx\r\n` 描述错误信息。
 
-###  CLIENT-LIST 列出在线用户
+####  CLIENT-LIST 列出在线用户
 
 格式为 `CLIENT-LIST passwd`, 命令会返回所有在线的用户名密码，执行正常返回格式为：
 
@@ -93,19 +101,19 @@ user:pass  192.x.x.x 2020-03-31 10:00:00\r\n
 
 失败返回格式为 `ERROR xxxx\r\n`描述了错误信息。
 
-###  USER-UPDATE 更新用户名密码
+####  USER-UPDATE 更新用户名密码
 
 格式为 `USER-UPDATE passwd user newpass`，命令用于修改用户密码。
 
 执行正常返回 `OK USER-UPDATE\r\n\r\n`，失败返回 `ERROR xxxx\r\n` 描述错误信息。
 
-###  SOURCE-ADD 新增源 CORS 数据
+####  SOURCE-ADD 新增源 CORS 数据
 
 格式为 `SOURCE-ADD passwd SERVER user:pass EDATE [ETIME]`，其中 `SERVER` 为 CORS 服务器 IP，`user:pass` 为 CORS 服务器用户名密码，`EDATE` 为过期日期，`ETIME` 为可选的过期时间，默认为 `23:59:59`。命令向数据库中新增一条源 CORS 数据。这里没有提供服务器端口信息，因为 ntrip_caster 约定自身监听的端口与源 CORS 端口一致。
 
 执行正常返回 `OK SOURCE-ADD\r\n\r\n`，失败返回 `ERROR xxxx\r\n` 描述错误信息。
 
-### SOURCE-LIST 列出所有源 CORS 数据
+#### SOURCE-LIST 列出所有源 CORS 数据
 
 格式为 `SOURCE-LIST passwd`，命令会输出所有的源 CORS 数据，执行正常返回格式：
 
@@ -122,7 +130,7 @@ OK SOURCE-LIST\r\n
 
 
 
-### 备注
+#### 备注
 
 ntrip_caster 代码中默认监听 8000（管理端口），8001-8003（Caster端口）。8001-8003 为 Caster 服务端口，这些是针对 qx 设定的，可以根据实际需求修改代码。
 
@@ -135,7 +143,7 @@ ntrip_caster 代码中默认监听 8000（管理端口），8001-8003（Caster�
 
 
 
-## others
+### others
 
 ntrip_caster 是经过实际验证的程序，但还有一些需要改进的地方：
 
@@ -147,16 +155,6 @@ ntrip_caster 是经过实际验证的程序，但还有一些需要改进的地�
 
 
 All other details you can find at [cors-rely document](https://github.com/tisyang/ntrip_caster/blob/master/README.md).
-
-
-# maintainer
-murphe@qq.com
-
-
-
-
-# license
-BSD-3.
 
 
 
@@ -172,3 +170,13 @@ git submodule add https://github.com/tisyang/ulog.git thirdparties/ulog/
 git submodule status
 git submodule update --init --recursive
 ```
+
+
+# maintainer
+murphe@qq.com
+
+
+
+
+# license
+BSD-3.
