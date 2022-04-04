@@ -19,30 +19,12 @@ file(WRITE ${PROJECT_BINARY_DIR}/repo_version.h
 )
 include_directories(${PROJECT_BINARY_DIR})
 
-add_subdirectory(wsocket)
-add_subdirectory(libfort)
-add_subdirectory(ulog)
 
-if(WIN32)
-	set(SRC src/ntripcaster.c src/base64.c src/proxy_cluster.c src/geohash.c src/tokens.c src/evwrap.c)
+# ntrip caster
+# -----------------------------------------------
+add_subdirectory(ntrip_caster)
 
-	# for windows platform's sqlite3. 20.5.14
-	# change
-	# set(LIBS wsocket fort ulog sqlite3)
-	# to
-	add_library(sqlite3_win STATIC ${CMAKE_SOURCE_DIR}/sqlite3_for_win/sqlite3.c sqlite3_for_win/shell.c)
-	target_include_directories(sqlite3_win PUBLIC sqlite3_for_win)
-	include_directories(sqlite3_for_win)
-
-	set(LIBS wsocket fort ulog sqlite3_win)
-
-else()
-	set(SRC src/ntripcaster.c src/base64.c src/proxy_cluster.c src/geohash.c src/tokens.c)
-	set(LIBS wsocket fort ulog sqlite3 ev m)
-endif()
-
-add_executable(ntrip_caster ${SRC})
-target_link_libraries(ntrip_caster ${LIBS})
 
 # ntrip server
-add_subdirectory(src_ntrip_server)
+# -----------------------------------------------
+add_subdirectory(ntrip_server)

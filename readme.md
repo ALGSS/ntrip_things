@@ -160,3 +160,15 @@ BSD-3.
 
 
 
+## submodule
+```bash
+git submodule 
+
+git submodule add https://github.com/tisyang/wsocket.git thirdparties/wsocket/
+git submodule add https://github.com/opensource-mirrors/freebsd-queue.git thirdparties/queue/
+git submodule add https://github.com/opensource-mirrors/libev.git thirdparties/libev/
+git submodule add https://github.com/tisyang/ulog.git thirdparties/ulog/
+
+git submodule status
+git submodule update --init --recursive
+```

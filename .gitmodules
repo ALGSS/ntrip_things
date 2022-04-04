@@ -1,12 +1,12 @@
-[submodule "wsocket"]
-	path = wsocket
+[submodule "thirdparties/wsocket"]
+	path = thirdparties/wsocket
 	url = https://github.com/tisyang/wsocket.git
-[submodule "queue"]
-	path = queue
+[submodule "thirdparties/queue"]
+	path = thirdparties/queue
 	url = https://github.com/opensource-mirrors/freebsd-queue.git
-[submodule "libev"]
-	path = libev
+[submodule "thirdparties/libev"]
+	path = thirdparties/libev
 	url = https://github.com/opensource-mirrors/libev.git
-[submodule "ulog"]
-	path = ulog
+[submodule "thirdparties/ulog"]
+	path = thirdparties/ulog
 	url = https://github.com/tisyang/ulog.git
