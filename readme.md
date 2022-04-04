@@ -1,12 +1,12 @@
 NTRIP THINGS
 
 
-# ntrip server
+# Ntrip Server
 ...
 
 
 
-# ntrip Caster
+# Ntrip Caster
 [ntrip caster](https://github.com/ALGSS/ntrip_caster) project is forked  [tisyang/ntrip_caster](https://github.com/tisyang/ntrip_caster). This project is serverd as a CORS network's NTRIP caster service program. 
 
 It is developed by c program language and support compiled on windows or linux platform. It is also support high  concurrent  underling  based on single thread and libev.

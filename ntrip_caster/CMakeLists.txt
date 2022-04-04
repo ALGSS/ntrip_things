@@ -1,6 +1,6 @@
-add_subdirectory(../thirdparties/wsocket)
-add_subdirectory(../thirdparties/libfort)
-add_subdirectory(../thirdparties/ulog)
+add_subdirectory(../thirdparties/wsocket build_cmake_wsocket)
+add_subdirectory(../thirdparties/libfort build_cmake_libfort)
+add_subdirectory(../thirdparties/ulog build_cmake_ulog)
 
 if(WIN32)
     set(SRC src/ntripcaster.c src/base64.c src/proxy_cluster.c src/geohash.c src/tokens.c src/evwrap.c)
