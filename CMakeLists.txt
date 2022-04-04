@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.6)
-project(ntrip_caster)
+project(ntrip_things)
 set(CMAKE_C_STANDARD 99)
 
 # using git version
@@ -41,6 +41,8 @@ else()
 	set(LIBS wsocket fort ulog sqlite3 ev m)
 endif()
 
-add_executable(${PROJECT_NAME} ${SRC})
-target_link_libraries(${PROJECT_NAME} ${LIBS})
+add_executable(ntrip_caster ${SRC})
+target_link_libraries(ntrip_caster ${LIBS})
 
+# ntrip server
+add_subdirectory(src_ntrip_server)
