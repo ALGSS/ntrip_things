@@ -10,3 +10,6 @@
 [submodule "thirdparties/ulog"]
 	path = thirdparties/ulog
 	url = https://github.com/tisyang/ulog.git
+[submodule "thirdparties/ref_ntrip"]
+	path = thirdparties/ref_ntrip
+	url = https://github.com/sevensx/ntrip.git
