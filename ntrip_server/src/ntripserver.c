@@ -113,6 +113,9 @@ enum OUTMODE {
 #define BUFSZ 10240
 #define SZ 64
 
+
+
+
 /* default socket source */
 #define SERV_HOST_ADDR "localhost"
 #define SERV_TCP_PORT 2101
@@ -159,9 +162,11 @@ static const char *mountpoint = NULL;
 static int udp_cseq = 1;
 static int udp_tim, udp_seq, udp_init;
 
+
+
+
 /* Forward references */
-static void
-send_receive_loop(sockettype sock, int outmode, struct sockaddr *pcasterRTP, socklen_t length, unsigned int rtpssrc);
+static void send_receive_loop(sockettype sock, int outmode, struct sockaddr *pcasterRTP, socklen_t length, unsigned int rtpssrc);
 
 static void usage(int, char *);
 
@@ -169,7 +174,7 @@ static int encode(char *buf, int size, const char *user, const char *pwd);
 
 static int send_to_caster(char *input, sockettype socket, int input_size);
 
-static void close_session(const char *caster_addr, const char *mountpoint, int session, char *rtsp_ext, int fallback);
+static void close_session(const char *caster_addr, const char *mount_point, int session, char *rtsp_ext, int fallback);
 
 static int reconnect(int rec_sec, int rec_sec_max);
 
@@ -182,51 +187,22 @@ static int openserial(const char* tty, int blocksz, int baud);
 static void handle_sigpipe(int sig);
 static void handle_alarm(int sig);
 #else
-
 static HANDLE openserial(const char *tty, int baud);
-
+int gettimeofday(struct timeval *tp, void *tzp);
 #endif
 
-#ifdef WINDOWSVERSION
 
-int gettimeofday(struct timeval *tp, void *tzp) {
-    time_t clock;
-    struct tm tm;
-    SYSTEMTIME wtm;
-    GetLocalTime(&wtm);
-    tm.tm_year = wtm.wYear - 1900;
-    tm.tm_mon = wtm.wMonth - 1;
-    tm.tm_mday = wtm.wDay;
-    tm.tm_hour = wtm.wHour;
-    tm.tm_min = wtm.wMinute;
-    tm.tm_sec = wtm.wSecond;
-    tm.tm_isdst = -1;
 
-    clock = mktime(&tm);
-    tp->tv_sec = clock;
-    tp->tv_usec = wtm.wMilliseconds * 1000;
-    return (0);
-}
 
-#endif
 
-/*
- * main
- *
- * Main entry point for the program.  Processes command-line arguments and
- * prepares for action.
- *
- * Parameters:
- *     argc : integer        : Number of command-line arguments.
- *     argv : array of char  : Command-line arguments as an array of
- *                             zero-terminated pointers to strings.
- *
- * Return Value:
- *     The function does not return a value (although its return type is int).
- *
- * Remarks:
- *
- */
+
+/**
+* Main entry point for the program.  Processes command-line arguments and
+* prepares for action.
+* @param argc
+* @param argv
+* @return
+*/
 int main(int argc, char **argv) {
     int c;
     int size = 2048; /* for setting send buffer size */
@@ -1310,8 +1286,15 @@ int main(int argc, char **argv) {
     return 0;
 }
 
-static void
-send_receive_loop(sockettype sock, int outmode, struct sockaddr *pcasterRTP, socklen_t length, unsigned int rtpssrc) {
+/**
+*
+* @param sock
+* @param outmode
+* @param pcasterRTP
+* @param length
+* @param rtpssrc
+*/
+static void send_receive_loop(sockettype sock, int outmode, struct sockaddr *pcasterRTP, socklen_t length, unsigned int rtpssrc) {
     int nodata = 0;
     char buffer[BUFSZ] = {0};
     char sisnetbackbuffer[200];
@@ -1333,9 +1316,9 @@ send_receive_loop(sockettype sock, int outmode, struct sockaddr *pcasterRTP, soc
 #ifdef WINDOWSVERSION
         u_long blockmode = 1;
         if (ioctlsocket(socket_tcp, FIONBIO, &blockmode))
-#else  /* WINDOWSVERSION */
+#else 
             if (fcntl(socket_tcp, F_SETFL, O_NONBLOCK) < 0)
-#endif /* WINDOWSVERSION */
+#endif
         {
             fprintf(stderr, "Could not set nonblocking mode\n");
             return;
@@ -1345,9 +1328,9 @@ send_receive_loop(sockettype sock, int outmode, struct sockaddr *pcasterRTP, soc
 #ifdef WINDOWSVERSION
         u_long blockmode = 1;
         if (ioctlsocket(socket_tcp, FIONBIO, &blockmode))
-#else  /* WINDOWSVERSION */
+#else 
             if (fcntl(socket_tcp, F_SETFL, O_NONBLOCK) < 0)
-#endif /* WINDOWSVERSION */
+#endif
         {
             fprintf(stderr, "Could not set nonblocking mode\n");
             return;
@@ -1440,7 +1423,9 @@ send_receive_loop(sockettype sock, int outmode, struct sockaddr *pcasterRTP, soc
                 nBufferBytes = 0;
             }
         }
+        
         if (nBufferBytes < 0) return;
+        
         /**  send data ***/
         if ((nBufferBytes) && (outmode == NTRIP1)) /*** Ntrip-Version 1.0 ***/
         {
@@ -1506,7 +1491,7 @@ send_receive_loop(sockettype sock, int outmode, struct sockaddr *pcasterRTP, soc
                 return;
             }
         }
-            /*** Ntrip-Version 2.0 HTTP/1.1 ***/
+        /*** Ntrip-Version 2.0 HTTP/1.1 ***/
         else if ((nBufferBytes) && (outmode == HTTP)) {
             if (!remainChunk) {
                 int nChunkBytes = snprintf(szSendBuffer, sizeof(szSendBuffer), "%x\r\n", nBufferBytes);
@@ -1598,13 +1583,14 @@ send_receive_loop(sockettype sock, int outmode, struct sockaddr *pcasterRTP, soc
                 }
                 laststate = ct;
             }
-            /* ignore RTSP server replies */
+            
+            // ignore RTSP server replies
             if ((r = recv(socket_tcp, buffer, sizeof(buffer), 0)) < 0) {
 #ifdef WINDOWSVERSION
                 if (WSAGetLastError() != WSAEWOULDBLOCK)
-#else  /* WINDOWSVERSION */
-                    if (errno != EAGAIN)
-#endif /* WINDOWSVERSION */
+#else
+                if (errno != EAGAIN)
+#endif
                 {
                     fprintf(stderr, "Control connection closed\n");
                     return;
@@ -1617,28 +1603,20 @@ send_receive_loop(sockettype sock, int outmode, struct sockaddr *pcasterRTP, soc
         }
         if (send_recv_success == 3) reconnect_sec = 1;
     }
-    return;
+
 }
 
-/********************************************************************
- * openserial
- *
- * Open the serial port with the given device name and configure it for
- * reading NMEA data from a GPS receiver.
- *
- * Parameters:
- *     tty     : pointer to    : A zero-terminated string containing the device
- *               unsigned char   name of the appropriate serial port.
- *     blocksz : integer       : Block size for port I/O  (ifndef
- *WINDOWSVERSION) baud :    integer       : Baud rate for port I/O
- *
- * Return Value:
- *     The function returns a file descriptor for the opened port if successful.
- *     The function returns -1 / INVALID_HANDLE_VALUE in the event of an error.
- *
- * Remarks:
- *
- ********************************************************************/
+
+/**
+* Open the serial port with the given device name and configure it for
+* reading NMEA data from a GPS receiver.
+* @param tty        pointer to    : A zero-terminated string containing the device
+*                   unsigned char   name of the appropriate serial port.
+* @param blocksz    integer       : Block size for port I/O
+* @param baud       integer       : WINDOWSVERSION，Baud rate for port I/O
+* @return
+*/
+
 #ifndef WINDOWSVERSION
 static int openserial(const char* tty, int blocksz, int baud) {
   struct termios termios;
@@ -1729,6 +1707,7 @@ static int openserial(const char* tty, int blocksz, int baud) {
   }
   return (gps_serial);
 }
+
 #else
 
 static HANDLE openserial(const char *tty, int baud) {
@@ -1766,24 +1745,44 @@ static HANDLE openserial(const char *tty, int baud) {
 
 #endif
 
-/********************************************************************
- * usage
- *
- * Send a usage message to standard error and quit the program.
- *
- * Parameters:
- *     None.
- *
- * Return Value:
- *     The function does not return a value.
- *
- * Remarks:
- *
- *********************************************************************/
+
+#ifdef WINDOWSVERSION
+/**
+*
+* @param tp
+* @param tzp
+* @return
+*/
+int gettimeofday(struct timeval *tp, void *tzp) {
+    time_t clock;
+    struct tm tm;
+    SYSTEMTIME wtm;
+    GetLocalTime(&wtm);
+    tm.tm_year = wtm.wYear - 1900;
+    tm.tm_mon = wtm.wMonth - 1;
+    tm.tm_mday = wtm.wDay;
+    tm.tm_hour = wtm.wHour;
+    tm.tm_min = wtm.wMinute;
+    tm.tm_sec = wtm.wSecond;
+    tm.tm_isdst = -1;
+
+    clock = mktime(&tm);
+    tp->tv_sec = clock;
+    tp->tv_usec = wtm.wMilliseconds * 1000;
+
+    return 0;
+}
+#endif
+
+
+/**
+* Send a usage message to standard error and quit the program.
+* @param rc
+* @param name
+*/
 #ifdef __GNUC__
 __attribute__ ((noreturn))
-#endif /* __GNUC__ */
-
+#endif
 void usage(int rc, char *name) {
     fprintf(stderr, "Version %s (%s) GPL" COMPILEDATE "\nUsage:\n%s [OPTIONS]\n", revisionstr, datestr, name);
     fprintf(stderr, "PURPOSE\n");
@@ -1956,28 +1955,29 @@ void usage(int rc, char *name) {
             "                         optional for NTRIP Version 2.0 in "
             "RTSP/RTP and TCP/IP mode\n\n");
     exit(rc);
-} /* usage */
+}
 
-/********************************************************************/
-/* signal handling                                                  */
-/********************************************************************/
+
+
+// signal handling
 #ifdef __GNUC__
 static void handle_sigint(int sig __attribute__((__unused__)))
-#else  /* __GNUC__ */
-
+#else
 static void handle_sigint(int sig)
-#endif /* __GNUC__ */
+#endif
 {
     sigint_received = 1;
     fprintf(stderr, "WARNING: SIGINT received - ntripserver terminates\n");
 }
 
+
+// alarm handle
 #ifndef WINDOWSVERSION
 #ifdef __GNUC__
 static void handle_alarm(int sig __attribute__((__unused__)))
-#else  /* __GNUC__ */
+#else
 static void handle_alarm(int sig)
-#endif /* __GNUC__ */
+#endif
 {
   sigalarm_received = 1;
   fprintf(stderr, "ERROR: more than %d seconds no activity\n", ALARMTIME);
@@ -1985,14 +1985,20 @@ static void handle_alarm(int sig)
 
 #ifdef __GNUC__
 static void handle_sigpipe(int sig __attribute__((__unused__)))
-#else  /* __GNUC__ */
+#else
 static void handle_sigpipe(int sig)
-#endif /* __GNUC__ */
+#endif
 {
   sigpipe_received = 1;
 }
-#endif /* WINDOWSVERSION */
+#endif
 
+
+/**
+* 
+* @param sig
+* @param handler
+*/
 static void setup_signal_handler(int sig, void (*handler)(int)) {
 #if _POSIX_VERSION > 198800L
     struct sigaction action;
@@ -2005,12 +2011,10 @@ static void setup_signal_handler(int sig, void (*handler)(int)) {
 #else
     signal(sig, handler);
 #endif
-    return;
-} /* setupsignal_handler */
+}
 
-/********************************************************************
- * base64-encoding                                                  *
- *******************************************************************/
+
+// base64-encoding
 static const char encodingTable[64] = {'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P',
                                        'Q', 'R', 'S', 'T', 'U', 'V',
                                        'W', 'X', 'Y', 'Z', 'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l',
@@ -2018,8 +2022,16 @@ static const char encodingTable[64] = {'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', '
                                        's', 't', 'u', 'v', 'w', 'x', 'y', 'z', '0', '1', '2', '3', '4', '5', '6', '7',
                                        '8', '9', '+', '/'};
 
-/* does not buffer overrun, but breaks directly after an error */
-/* returns the number of required bytes */
+
+
+/**
+* does not buffer overrun, but breaks directly after an error
+* @param buf
+* @param size
+* @param user
+* @param pwd
+* @return the number of required bytes
+*/
 static int encode(char *buf, int size, const char *user, const char *pwd) {
     unsigned char inbuf[3];
     char *out = buf;
@@ -2061,9 +2073,13 @@ static int encode(char *buf, int size, const char *user, const char *pwd) {
     return bytes;
 } /* base64 Encoding */
 
-
-
-// send message to caster
+/**
+* send message to caster
+* @param input
+* @param socket
+* @param input_size
+* @return
+*/
 static int send_to_caster(char *input, sockettype socket, int input_size) {
     int send_error = 1;
 
@@ -2080,11 +2096,17 @@ static int send_to_caster(char *input, sockettype socket, int input_size) {
     return send_error;
 }
 
-// reconnect
+/**
+* reconnect
+* @param rec_sec  ms
+* @param rec_sec_max
+* @return
+*/
 int reconnect(int rec_sec, int rec_sec_max) {
     fprintf(stderr, "reconnect in <%d> seconds\n\n", rec_sec);
     rec_sec *= 2;
-    if (rec_sec > rec_sec_max) rec_sec = rec_sec_max;
+    if (rec_sec > rec_sec_max)
+        rec_sec = rec_sec_max;
 #ifndef WINDOWSVERSION
     sleep(rec_sec);
     sigpipe_received = 0;
@@ -2095,9 +2117,15 @@ int reconnect(int rec_sec, int rec_sec_max) {
     return rec_sec;
 }
 
-
-// close session
-static void close_session(const char *caster_addr, const char *mountpoint, int session, char *rtsp_ext, int fallback) {
+/**
+* close session
+* @param caster_addr
+* @param mount_point
+* @param session
+* @param rtsp_ext
+* @param fallback
+*/
+static void close_session(const char *caster_addr, const char *mount_point, int session, char *rtsp_ext, int fallback) {
     int size_send_buf;
     char send_buf[BUFSZ];
 
@@ -2155,7 +2183,7 @@ static void close_session(const char *caster_addr, const char *mountpoint, int s
                                      "CSeq: %d\r\n"
                                      "Session: %u\r\n"
                                      "\r\n",
-                                     caster_addr, rtsp_ext, mountpoint, udp_cseq++, session);
+                                     caster_addr, rtsp_ext, mount_point, udp_cseq++, session);
             if ((size_send_buf >= (int) sizeof(send_buf)) || (size_send_buf < 0)) {
                 fprintf(stderr, "ERROR: Destination caster request to long\n");
                 exit(0);
