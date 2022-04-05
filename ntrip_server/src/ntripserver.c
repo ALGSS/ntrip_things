@@ -1,10 +1,3 @@
-//#pragma clang diagnostic push
-//#pragma ide diagnostic ignored "OCDFAInspection"
-//#pragma ide diagnostic ignored "hicpp-multiway-paths-covered"
-//#pragma ide diagnostic ignored "cppcoreguidelines-narrowing-conversions"
-//#pragma ide diagnostic ignored "cert-err34-c"
-//#pragma ide diagnostic ignored "hicpp-signed-bitwise"
-
 /*
  * $Id: ntripserver.c 8789 2019-08-05 08:31:56Z stoecker $
  *
@@ -55,15 +48,15 @@ static char datestr[] = "$Date: 2019-08-05 08:31:56 +0000 (Mon, 05 Aug 2019) $";
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <sys/types.h>
+// #include <sys/types.h>
 #include <time.h>
 
 
 #ifdef WINDOWSVERSION
 
 #include <io.h>
-#include <sys/stat.h>
-#include <time.h>
+// #include <sys/stat.h>
+// #include <time.h>
 #include <winsock2.h>
 #include <windows.h>
 
@@ -135,11 +128,13 @@ enum OUTMODE {
 #define TIME_RESOLUTION 125
 
 static int ttybaud = 19200;
+
 #ifndef WINDOWSVERSION
 static const char* ttyport = "/dev/gps";
 #else
 static const char *ttyport = "COM1";
 #endif
+
 static const char *filepath = "/dev/stdin";
 static enum MODE inputmode = INFILE;
 static int sisnet = 31;
@@ -147,12 +142,14 @@ static int gps_file = -1;
 static sockettype gps_socket = INVALID_SOCKET;
 static sockettype socket_tcp = INVALID_SOCKET;
 static sockettype socket_udp = INVALID_SOCKET;
+
 #ifndef WINDOWSVERSION
 static int gps_serial = INVALID_HANDLE_VALUE;
 static int sigpipe_received = 0;
 #else
 HANDLE gps_serial = INVALID_HANDLE_VALUE;
 #endif
+
 static int sigalarm_received = 0;
 static int sigint_received = 0;
 static int reconnect_sec = 1;
@@ -204,6 +201,7 @@ int gettimeofday(struct timeval *tp, void *tzp) {
     tm.tm_min = wtm.wMinute;
     tm.tm_sec = wtm.wSecond;
     tm.tm_isdst = -1;
+
     clock = mktime(&tm);
     tp->tv_sec = clock;
     tp->tv_usec = wtm.wMilliseconds * 1000;
@@ -497,7 +495,8 @@ int main(int argc, char **argv) {
             fprintf(stderr,
                     "WARNING: Missing password argument for stream upload - "
                     "are you really sure?\n");
-        } else {
+        }
+        else {
             nBufferBytes += encode(authorization, sizeof(authorization), user, password);
             if (nBufferBytes > (int) sizeof(authorization)) {
                 fprintf(stderr,
@@ -526,7 +525,8 @@ int main(int argc, char **argv) {
                     "length = %d (max: %d)\n",
                     i, SZ);
             exit(0);
-        } else {
+        }
+        else {
             strncpy(post_extension, szSendBuffer, (size_t) i);
             strcpy(szSendBuffer, "");
             i = snprintf(szSendBuffer, sizeof(szSendBuffer), ":%d", casteroutport);
@@ -541,12 +541,14 @@ int main(int argc, char **argv) {
                     "%d)\n",
                     i, SZ);
             exit(0);
-        } else {
+        }
+        else {
             strncpy(get_extension, szSendBuffer, (size_t) i);
             strcpy(szSendBuffer, "");
             i = 0;
         }
-    } else {
+    }
+    else {
         outhost = casterouthost;
         outport = casteroutport;
         inhost = casterinhost;
@@ -613,7 +615,8 @@ int main(int argc, char **argv) {
                             break;
                         }
                         fclose(fh);
-                    } else {
+                    }
+                    else {
                         fprintf(stderr, "ERROR: can't read init file <%s>\n", initfile);
                         reconnect_sec_max = 0;
                         input_init = 0;
@@ -629,10 +632,12 @@ int main(int argc, char **argv) {
                 if (inputmode == SISNET) {
                     if (!inhost) inhost = SISNET_SERVER;
                     if (!inport) inport = SISNET_PORT;
-                } else if (inputmode == CASTER) {
+                }
+                else if (inputmode == CASTER) {
                     if (!inport) inport = NTRIP_PORT;
                     if (!inhost) inhost = NTRIP_CASTER;
-                } else if ((inputmode == TCPSOCKET) || (inputmode == UDPSOCKET)) {
+                }
+                else if ((inputmode == TCPSOCKET) || (inputmode == UDPSOCKET)) {
                     if (!inport) inport = SERV_TCP_PORT;
                     if (!inhost) inhost = SERV_HOST_ADDR;
                 }
@@ -708,7 +713,8 @@ int main(int argc, char **argv) {
                         szSendBuffer[nBufferBytes++] = '\n';
                         szSendBuffer[nBufferBytes++] = '\r';
                         szSendBuffer[nBufferBytes++] = '\n';
-                    } else {
+                    }
+                    else {
                         nBufferBytes = snprintf(szSendBuffer, sizeof(szSendBuffer),
                                                 "GET %s/%s HTTP/1.0\r\n"
                                                 "User-Agent: %s/%s\r\n"
@@ -740,7 +746,8 @@ int main(int argc, char **argv) {
                                 }
                                 input_init = 0;
                                 break;
-                            } else
+                            }
+                            else
                                 init = 1;
                         }
                     }
@@ -765,7 +772,8 @@ int main(int argc, char **argv) {
                             break;
                         }
                         fclose(fh);
-                    } else {
+                    }
+                    else {
                         fprintf(stderr, "ERROR: can't read init file <%s>\n", initfile);
                         reconnect_sec_max = 0;
                         input_init = 0;
@@ -813,7 +821,8 @@ int main(int argc, char **argv) {
                         reconnect_sec_max = 0;
                         input_init = 0;
                         break;
-                    } else {
+                    }
+                    else {
                         fprintf(stderr, "Sending user ID for receiver...\n");
                         nBufferBytes = recv(gps_socket, szSendBuffer, BUFSZ, 0);
                         strcpy(szSendBuffer, recvrid);
@@ -830,7 +839,8 @@ int main(int argc, char **argv) {
                         reconnect_sec_max = 0;
                         input_init = 0;
                         break;
-                    } else {
+                    }
+                    else {
                         fprintf(stderr, "Sending user password for receiver...\n");
                         nBufferBytes = recv(gps_socket, szSendBuffer, BUFSZ, 0);
                         strcpy(szSendBuffer, recvrpwd);
@@ -935,7 +945,8 @@ int main(int argc, char **argv) {
                         reconnect_sec_max = 0;
                         output_init = 0;
                         break;
-                    } else {
+                    }
+                    else {
                         rtpbuf[i++] = '\r';
                         rtpbuf[i++] = '\n';
                         rtpbuf[i++] = '\r';
@@ -946,7 +957,8 @@ int main(int argc, char **argv) {
                             reconnect_sec_max = 0;
                             output_init = 0;
                             break;
-                        } else {
+                        }
+                        else {
                             int stop = 0;
                             int numbytes;
                             if ((numbytes = recv(socket_tcp, rtpbuf, sizeof(rtpbuf) - 1, 0)) > 0) {
@@ -967,17 +979,19 @@ int main(int argc, char **argv) {
                                     {
                                         i += l;
                                         session = 0;
-                                        while (i < numbytes && rtpbuf[i] >= '0' && rtpbuf[i] <= '9') session = session *
-                                                                                                               10 +
-                                                                                                               rtpbuf[i++] -
-                                                                                                               '0';
+                                        while (i < numbytes && rtpbuf[i] >= '0' && rtpbuf[i] <= '9')
+                                            session = session *
+                                                      10 +
+                                                      rtpbuf[i++] -
+                                                      '0';
                                         if (rtpbuf[i] != '\r') {
                                             fprintf(stderr, "Could not extract session number\n");
                                             stop = 1;
                                         }
                                     }
 
-                                } else {
+                                }
+                                else {
                                     int k;
                                     fprintf(stderr, "Could not access mountpoint: ");
                                     for (k = 12; k < numbytes && rtpbuf[k] != '\n' && rtpbuf[k] != '\r'; ++k) {
@@ -1010,7 +1024,8 @@ int main(int argc, char **argv) {
                                 rtpbuf[11] = (session) & 0xFF;
 
                                 send(socket_tcp, rtpbuf, 12, 0); /* cleanup */
-                            } else {
+                            }
+                            else {
                                 reconnect_sec_max = 600;
                                 output_init = 0;
                             }
@@ -1107,8 +1122,9 @@ int main(int argc, char **argv) {
                             close_session(casterouthost, mountpoint, session, rtsp_extension, 1);
                             outputmode = NTRIP1;
                             break;
-                        } else if ((strstr(szSendBuffer, "HTTP/1.1 401 Unauthorized")) ||
-                                   (strstr(szSendBuffer, "501 Not Implemented"))) {
+                        }
+                        else if ((strstr(szSendBuffer, "HTTP/1.1 401 Unauthorized")) ||
+                                 (strstr(szSendBuffer, "501 Not Implemented"))) {
                             reconnect_sec_max = 0;
                         }
                         output_init = 0;
@@ -1145,7 +1161,8 @@ int main(int argc, char **argv) {
                     }
                     if ((getsockname(socket_udp, (struct sockaddr *) &local, &len)) != -1) {
                         client_port = (unsigned int) ntohs(local.sin_port);
-                    } else {
+                    }
+                    else {
                         perror("ERROR: getsockname(localhost)");
                         reconnect_sec_max = 0;
                         output_init = 0;
@@ -1197,7 +1214,8 @@ int main(int argc, char **argv) {
                                     outputmode = HTTP;
                                     fallback = 1;
                                     break;
-                                } else {
+                                }
+                                else {
                                     fprintf(stderr,
                                             "       Ntrip-Version 2.0 not implemented at "
                                             "Destination caster"
@@ -1214,8 +1232,9 @@ int main(int argc, char **argv) {
                                     fallback = 1;
                                     break;
                                 }
-                            } else if ((strstr(szSendBuffer, "RTSP/1.0 401 Unauthorized")) ||
-                                       (strstr(szSendBuffer, "RTSP/1.0 501 Not Implemented"))) {
+                            }
+                            else if ((strstr(szSendBuffer, "RTSP/1.0 401 Unauthorized")) ||
+                                     (strstr(szSendBuffer, "RTSP/1.0 501 Not Implemented"))) {
                                 reconnect_sec_max = 0;
                             }
                             output_init = 0;
@@ -1249,8 +1268,9 @@ int main(int argc, char **argv) {
                                 output_init = 0;
                                 break;
                             }
-                        } else if ((strstr(szSendBuffer, "RTSP/1.0 200 OK\r\n")) &&
-                                   (strstr(szSendBuffer, "CSeq: 2\r\n"))) {
+                        }
+                        else if ((strstr(szSendBuffer, "RTSP/1.0 200 OK\r\n")) &&
+                                 (strstr(szSendBuffer, "CSeq: 2\r\n"))) {
                             /* fill structure with caster address information for UDP */
                             memset(&casterRTP, 0, sizeof(casterRTP));
                             casterRTP.sin_family = AF_INET;
@@ -1260,14 +1280,16 @@ int main(int argc, char **argv) {
                                 reconnect_sec_max = 0;
                                 output_init = 0;
                                 break;
-                            } else {
+                            }
+                            else {
                                 memcpy((char *) &casterRTP.sin_addr.s_addr, he->h_addr_list[0], (size_t) he->h_length);
                             }
                             len = (socklen_t) sizeof(casterRTP);
                             send_receive_loop(socket_udp, outputmode, (struct sockaddr *) &casterRTP, (socklen_t) len,
                                               session);
                             break;
-                        } else {
+                        }
+                        else {
                             break;
                         }
                     }
@@ -1318,7 +1340,8 @@ send_receive_loop(sockettype sock, int outmode, struct sockaddr *pcasterRTP, soc
             fprintf(stderr, "Could not set nonblocking mode\n");
             return;
         }
-    } else if (outmode == RTSP) {
+    }
+    else if (outmode == RTSP) {
 #ifdef WINDOWSVERSION
         u_long blockmode = 1;
         if (ioctlsocket(socket_tcp, FIONBIO, &blockmode))
@@ -1345,7 +1368,8 @@ send_receive_loop(sockettype sock, int outmode, struct sockaddr *pcasterRTP, soc
 #else
             time(&nodata_begin);
 #endif
-        } else {
+        }
+        else {
             nodata = 0;
 #ifdef WINDOWSVERSION
             time(&nodata_current);
@@ -1389,7 +1413,8 @@ send_receive_loop(sockettype sock, int outmode, struct sockaddr *pcasterRTP, soc
                 }
                 nBufferBytes = (int) nRead;
 #endif
-            } else
+            }
+            else
 #ifdef WINDOWSVERSION
                 nBufferBytes = recv(gps_socket, buffer, sizeof(buffer), 0);
 #else
@@ -1404,7 +1429,8 @@ send_receive_loop(sockettype sock, int outmode, struct sockaddr *pcasterRTP, soc
                 Sleep(3 * 1000);
 #endif
                 continue;
-            } else if ((nBufferBytes < 0) && (!sigint_received)) {
+            }
+            else if ((nBufferBytes < 0) && (!sigint_received)) {
                 perror("WARNING: reading input failed");
                 return;
             }
@@ -1425,14 +1451,17 @@ send_receive_loop(sockettype sock, int outmode, struct sockaddr *pcasterRTP, soc
                         perror("WARNING: could not send data to Destination caster");
                         return;
                     }
-                } else if (i) {
+                }
+                else if (i) {
                     memmove(buffer, buffer + i, (size_t) (nBufferBytes - i));
                     nBufferBytes -= i;
                 }
-            } else {
+            }
+            else {
                 nBufferBytes = 0;
             }
-        } else if ((nBufferBytes) && (outmode == UDP)) {
+        }
+        else if ((nBufferBytes) && (outmode == UDP)) {
             char rtpbuf[1592];
             int i;
             int ct = time(0);
@@ -1457,7 +1486,8 @@ send_receive_loop(sockettype sock, int outmode, struct sockaddr *pcasterRTP, soc
                     perror("WARNING: could not send data to Destination caster");
                     return;
                 }
-            } else
+            }
+            else
                 nBufferBytes = 0;
             i = recv(socket_tcp, rtpbuf, sizeof(rtpbuf), 0);
             if (i >= 12 && (unsigned char) rtpbuf[0] == (2 << 6) &&
@@ -1470,7 +1500,8 @@ send_receive_loop(sockettype sock, int outmode, struct sockaddr *pcasterRTP, soc
                     fprintf(stderr, "Connection end\n");
                     return;
                 }
-            } else if (time(0) > rtptime + 60) {
+            }
+            else if (time(0) > rtptime + 60) {
                 fprintf(stderr, "Timeout\n");
                 return;
             }
@@ -1488,7 +1519,8 @@ send_receive_loop(sockettype sock, int outmode, struct sockaddr *pcasterRTP, soc
                     perror("WARNING: could not send data to Destination caster");
                     return;
                 }
-            } else if (i) {
+            }
+            else if (i) {
                 memmove(buffer, buffer + i, (size_t) (nBufferBytes - i));
                 nBufferBytes -= i;
                 remainChunk -= i;
@@ -1508,7 +1540,8 @@ send_receive_loop(sockettype sock, int outmode, struct sockaddr *pcasterRTP, soc
                 rtptime = rand();
                 last = now;
                 isfirstpacket = 0;
-            } else {
+            }
+            else {
                 ++rtpseq;
                 sendtimediff = (((now.tv_sec - last.tv_sec) * 1000000) + (now.tv_usec - last.tv_usec));
                 rtptime += sendtimediff / TIME_RESOLUTION;
@@ -1538,11 +1571,13 @@ send_receive_loop(sockettype sock, int outmode, struct sockaddr *pcasterRTP, soc
                         perror("WARNING: could not send data to Destination caster");
                         return;
                     }
-                } else if (i) {
+                }
+                else if (i) {
                     memmove(buffer, buffer + (i - 12), (size_t) (nBufferBytes - (i - 12)));
                     nBufferBytes -= i - 12;
                 }
-            } else {
+            }
+            else {
                 nBufferBytes = 0;
             }
             ct = time(0);
@@ -1556,7 +1591,8 @@ send_receive_loop(sockettype sock, int outmode, struct sockaddr *pcasterRTP, soc
                 if (i > (int) sizeof(buffer) || i < 0) {
                     fprintf(stderr, "Requested data too long\n");
                     return;
-                } else if (send(socket_tcp, buffer, (size_t) i, 0) != i) {
+                }
+                else if (send(socket_tcp, buffer, (size_t) i, 0) != i) {
                     perror("send");
                     return;
                 }
@@ -1573,7 +1609,8 @@ send_receive_loop(sockettype sock, int outmode, struct sockaddr *pcasterRTP, soc
                     fprintf(stderr, "Control connection closed\n");
                     return;
                 }
-            } else if (!r) {
+            }
+            else if (!r) {
                 fprintf(stderr, "Control connection read error\n");
                 return;
             }
@@ -1714,10 +1751,12 @@ static HANDLE openserial(const char *tty, int baud) {
     if (!BuildCommDCB(str, &dcb)) {
         fprintf(stderr, "ERROR: get serial attributes\n");
         return (INVALID_HANDLE_VALUE);
-    } else if (!SetCommState(gps_serial, &dcb)) {
+    }
+    else if (!SetCommState(gps_serial, &dcb)) {
         fprintf(stderr, "ERROR: set serial attributes\n");
         return (INVALID_HANDLE_VALUE);
-    } else if (!SetCommTimeouts(gps_serial, &ct)) {
+    }
+    else if (!SetCommTimeouts(gps_serial, &ct)) {
         fprintf(stderr, "ERROR: set serial timeouts\n");
         return (INVALID_HANDLE_VALUE);
     }
@@ -2022,9 +2061,9 @@ static int encode(char *buf, int size, const char *user, const char *pwd) {
     return bytes;
 } /* base64 Encoding */
 
-/********************************************************************
- * send message to caster                                           *
- *********************************************************************/
+
+
+// send message to caster
 static int send_to_caster(char *input, sockettype socket, int input_size) {
     int send_error = 1;
 
@@ -2039,11 +2078,9 @@ static int send_to_caster(char *input, sockettype socket, int input_size) {
     }
 #endif
     return send_error;
-} /* send_to_caster */
+}
 
-/********************************************************************
- * reconnect                                                        *
- *********************************************************************/
+// reconnect
 int reconnect(int rec_sec, int rec_sec_max) {
     fprintf(stderr, "reconnect in <%d> seconds\n\n", rec_sec);
     rec_sec *= 2;
@@ -2056,11 +2093,10 @@ int reconnect(int rec_sec, int rec_sec_max) {
 #endif
     sigalarm_received = 0;
     return rec_sec;
-} /* reconnect */
+}
 
-/********************************************************************
- * close session                                                    *
- *********************************************************************/
+
+// close session
 static void close_session(const char *caster_addr, const char *mountpoint, int session, char *rtsp_ext, int fallback) {
     int size_send_buf;
     char send_buf[BUFSZ];
@@ -2071,13 +2107,15 @@ static void close_session(const char *caster_addr, const char *mountpoint, int s
             if (closesocket(gps_socket) == -1) {
                 perror("ERROR: close input device ");
                 exit(0);
-            } else {
+            }
+            else {
                 gps_socket = -1;
 #ifndef NDEBUG
                 fprintf(stderr, "close input device: successful\n");
 #endif
             }
-        } else if ((gps_serial != INVALID_HANDLE_VALUE) && (inputmode == SERIAL)) {
+        }
+        else if ((gps_serial != INVALID_HANDLE_VALUE) && (inputmode == SERIAL)) {
 #ifndef WINDOWSVERSION
             if (close(gps_serial) == INVALID_HANDLE_VALUE) {
               perror("ERROR: close input device ");
@@ -2095,11 +2133,13 @@ static void close_session(const char *caster_addr, const char *mountpoint, int s
                 fprintf(stderr, "close input device: successful\n");
 #endif
             }
-        } else if ((gps_file != -1) && (inputmode == INFILE)) {
+        }
+        else if ((gps_file != -1) && (inputmode == INFILE)) {
             if (close(gps_file) == -1) {
                 perror("ERROR: close input device ");
                 exit(0);
-            } else {
+            }
+            else {
                 gps_file = -1;
 #ifndef NDEBUG
                 fprintf(stderr, "close input device: successful\n");
@@ -2131,7 +2171,8 @@ static void close_session(const char *caster_addr, const char *mountpoint, int s
         if (closesocket(socket_udp) == -1) {
             perror("ERROR: close udp socket");
             exit(0);
-        } else {
+        }
+        else {
             socket_udp = -1;
 #ifndef NDEBUG
             fprintf(stderr, "close udp socket: successful\n");
@@ -2143,13 +2184,12 @@ static void close_session(const char *caster_addr, const char *mountpoint, int s
         if (closesocket(socket_tcp) == -1) {
             perror("ERROR: close tcp socket");
             exit(0);
-        } else {
+        }
+        else {
             socket_tcp = -1;
 #ifndef NDEBUG
             fprintf(stderr, "close tcp socket: successful\n");
 #endif
         }
     }
-} /* close_session */
-
-#pragma clang diagnostic pop
+}
