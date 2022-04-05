@@ -1,7 +1,9 @@
 NTRIP THINGS
 
 
-# Ntrip Server
+
+
+# 1. Ntrip Server
 
 ## ntripserver
 
@@ -50,13 +52,9 @@ acting as HTTP clients. **
 
 ## ntripserver
 
-The program ntripserver is designed to provide real-time data
-from a single NTRIP source running under a POSIX operating system.
+The program ntripserver is designed to provide real-time data from a single NTRIP source running under a POSIX operating system. <u>Basically the ntripserver **grabs a GNSS byte stream**</u> (Input, Source) from either
 
-<u>Basically the ntripserver grabs a GNSS byte stream</u> (Input, Source)
-from either
-
-1. a Serial port, or
+1. **a Serial port**, or
 2. an IP server, or
 3. a File, or
 4. a SISNeT Data Server, or
@@ -70,10 +68,7 @@ and forwards that incoming stream to either
 3. an NTRIP Version 2.0 Caster via plain UDP (Output, Destination), or
 4. an NTRIP Version 1.0 Caster.
 
-Please note, the options to support NTRIP Version 2.0 are currently still
-under development and should be used with care. Keep in mind that details
-of the NTRIP Version 2.0 transport protocol are still under discussion
-and may be changed.
+Please note, the options to support NTRIP Version 2.0 are currently still under development **and should be used with care**. Keep in mind that details of the NTRIP Version 2.0 transport protocol are still under discussion and may be changed.
 
 
 
@@ -121,14 +116,14 @@ The user may call the program with the following options:
 ```CMD
 -h|? print this help screen
 
--E <ProxyHost>       Proxy server host name or address, required i.e. when
-        	     running the program in a proxy server protected LAN,
-        	     optional
--F <ProxyPort>       Proxy server IP port, required i.e. when running
-        	     the program in a proxy server protected LAN, optional
--R <maxDelay>	     Reconnect mechanism with maximum delay between reconnect
-        	     attemts in seconds, default: no reconnect activated,
-        	     optional
+-E <ProxyHost>       Proxy server host name or address, required i.e. when running the program in a proxy server protected LAN,
+        	     	 optional
+
+-F <ProxyPort>       Proxy server IP port, required i.e. when running the program in a proxy server protected LAN, 
+					 optional
+-R <maxDelay>	     Reconnect mechanism with maximum delay between reconnect attemts in seconds, 
+            		 default: no reconnect activated,
+					 optional
 
 
 
@@ -137,6 +132,7 @@ The user may call the program with the following options:
    3 = File, 4 = SISNeT Data Server, 5 = UDP server, 6 = NTRIP Caster),
    mandatory
 
+
    <InputMode> = 1 (Serial Port): (using 8-N-1 = data bits-parity-stop bits)
    -i <Device>       Serial input device, default: /dev/gps, mandatory if
         	     <InputMode>=1
@@ -144,6 +140,7 @@ The user may call the program with the following options:
         	     if <InputMode>=1
    -f <InitFile>     Name of initialization file to be send to input device,
         	     optional
+
 
    <InputMode> = 2|5 (IP port | UDP port):
    -H <ServerHost>   Input host name or address, default: 127.0.0.1,
@@ -155,9 +152,11 @@ The user may call the program with the following options:
    -y <ServerPass>   Password, to access incoming stream, optional
    -B Bind to incoming UDP stream, optional for <InputMode> = 5
 
+
    <InputMode> = 3 (File):
    -s <File>	     File name to simulate stream by reading data from (log)
         	     file, default is /dev/stdin, mandatory for <InputMode> = 3
+
 
    <InputMode> = 4 (SISNeT Data Server):
    -H <SisnetHost>   SISNeT Data Server name or address,
@@ -168,6 +167,7 @@ The user may call the program with the following options:
    -l <SisnetPass>   SISNeT Data Server password, mandatory if <InputMode> = 4
    -V <SisnetVers>   SISNeT Data Server Version number, options are 2.1, 3.0
         	     or 3.1, default: 3.1, mandatory if <InputMode> = 4
+
 
    <InputMode> = 6 (NTRIP Version 1.0 Caster):
    -H <SourceHost>   Source caster name or address, default: 127.0.0.1,
@@ -229,23 +229,16 @@ Example2: *Reading from NTRIP Version 1.0 Caster and forward to NTRIP Version 2.
 
 ### NTRIP Caster password and mountpoint
 
-Feeding data streams into the NTRIP system using the ntripserver
-program needs a password (and a user ID for NTRIP Version 2.0)
-and one mountpoint per stream.
+Feeding data streams into the NTRIP system using the ntripserver program **needs a <u>password (and a user ID for NTRIP Version 2.0)</u> and one <u>mountpoint</u> per stream**.
 
-For the NTRIP Broadcasters EUREF-IP or IGS-IP this is currently
-available from http://igs.bkg.bund.de/index_ntrip_prov.htm
+For the NTRIP Broadcasters EUREF-IP or IGS-IP this is currently available from http://igs.bkg.bund.de/index_ntrip_prov.htm
 
 
 
 
 ## Disclaimer
 
-Note that this example server implementation is currently an
-experimental software. The BKG disclaims any liability nor
-responsibility to any person or entity with respect to any loss or
-damage caused, or alleged to be caused, directly or indirectly by the
-use and application of the NTRIP technology.
+Note that this example server implementation is currently an experimental software. The BKG disclaims any liability nor responsibility to any person or entity with respect to any loss or damage caused, or alleged to be caused, directly or indirectly by the use and application of the NTRIP technology.
 
 
 ## Further information
@@ -258,7 +251,7 @@ E-mail: euref-ip@bkg.bund.de
 
 
 
-# Ntrip Caster
+# 2. Ntrip Caster
 [ntrip caster](https://github.com/ALGSS/ntrip_caster) project is forked  [tisyang/ntrip_caster](https://github.com/tisyang/ntrip_caster). This project is serverd as a CORS network's NTRIP caster service program. 
 
 It is developed by c program language and support compiled on windows or linux platform. It is also support high  concurrent  underling  based on single thread and libev.
@@ -266,7 +259,7 @@ It is developed by c program language and support compiled on windows or linux p
 
 
 
-## usage
+## Usage
 
 ### technology pipeline
 
