@@ -27,6 +27,6 @@ if(IS_MSVC)
 endif()
 
 # create executable file
-add_executable(ntripserver ntripserver.c)
+add_executable(ntrip_server ntripserver.c)
 
 

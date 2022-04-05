@@ -24,12 +24,12 @@
 
 #ifdef MSDOS
 #  ifdef __GNUC__
-     /* DJGPP version 1.09+ on MS-DOS.
-      * The DJGPP 1.09 stat() function must be upgraded before gzip will
-      * fully work.
-      * No need for DIRENT, since <unistd.h> defines POSIX_SOURCE which
-      * implies DIRENT.
-      */
+/* DJGPP version 1.09+ on MS-DOS.
+ * The DJGPP 1.09 stat() function must be upgraded before gzip will
+ * fully work.
+ * No need for DIRENT, since <unistd.h> defines POSIX_SOURCE which
+ * implies DIRENT.
+ */
 #    define near
 #  else
 #    define MAXSEG_64K
@@ -118,8 +118,10 @@
 #  define PROTO
 #  define STDC_HEADERS
 #  define SET_BINARY_MODE(fd) setmode(fd, O_BINARY)
+
 #  include <io.h>
 #  include <malloc.h>
+
 #  ifdef NTFAT
 #    define NO_MULTIPLE_DOTS
 #    define MAX_EXT_CHARS 3
@@ -133,9 +135,9 @@
 #  ifdef __TURBOC__
 #    include <alloc.h>
 #    define DYN_ALLOC
-     /* Turbo C 2.0 does not accept static allocations of large arrays */
-     void * fcalloc (unsigned items, unsigned size);
-     void fcfree (void *ptr);
+/* Turbo C 2.0 does not accept static allocations of large arrays */
+void * fcalloc (unsigned items, unsigned size);
+void fcfree (void *ptr);
 #  else /* MSC */
 #    include <malloc.h>
 #    define fcalloc(nitems,itemsize) halloc((long)(nitems),(itemsize))
@@ -145,7 +147,7 @@
 #  ifdef MAXSEG_64K
 #    define fcalloc(items,size) calloc((items),(size))
 #  else
-#    define fcalloc(items,size) malloc((size_t)(items)*(size_t)(size))
+#    define fcalloc(items, size) malloc((size_t)(items)*(size_t)(size))
 #  endif
 #  define fcfree(ptr) free(ptr)
 #endif
@@ -187,7 +189,7 @@
 #    define NO_FCNTL_H
 #    include <fcntl.h> /* for read() and write() */
 #    define direct dirent
-     extern void _expand_args(int *argc, char ***argv);
+extern void _expand_args(int *argc, char ***argv);
 #    define EXPAND(argc,argv) _expand_args(&argc,&argv);
 #    undef  O_BINARY /* disable useless --ascii option */
 #  endif
@@ -262,7 +264,7 @@
 #endif
 
 
-	/* Common defaults */
+/* Common defaults */
 
 #ifndef OS_CODE
 #  define OS_CODE  0x03  /* assume Unix */
@@ -300,11 +302,11 @@
 
 #ifndef MIN_PART
 #  define MIN_PART 3
-   /* keep at least MIN_PART chars between dots in a file name. */
+/* keep at least MIN_PART chars between dots in a file name. */
 #endif
 
 #ifndef EXPAND
-#  define EXPAND(argc,argv)
+#  define EXPAND(argc, argv)
 #endif
 
 #ifndef RECORD_IO
